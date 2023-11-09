@@ -1,0 +1,15 @@
+{
+  "name": "doodle",
+  "version": "1.0.0",
+  "description": "A drawing app which allows multiple users to draw on the same canvas and chat in real-time.",
+  "main": "index.js",
+  "scripts": {
+    "dev": "concurrently \"cd server && npm dev\" \"cd client && npm dev\"",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Molin Deng",
+  "license": "ISC",
+  "devDependencies": {
+    "concurrently": "^8.2.2"
+  }
+}
