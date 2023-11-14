@@ -1,7 +1,7 @@
 {
   "name": "doodle",
   "version": "1.0.0",
-  "description": "A drawing app which allows multiple users to draw on the same canvas and chat in real-time.",
+  "description": "A drawing app which allows multiple users to draw on the same canvas.",
   "main": "index.js",
   "scripts": {
     "dev": "concurrently \"cd server && npm dev\" \"cd client && npm dev\"",
