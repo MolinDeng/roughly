@@ -1,9 +1,9 @@
-import Image from 'next/image';
+import RoughCanvas from '@/components/RoughCanvas';
 
 export default function Home() {
   return (
-    <main className="flex min-h-screen flex-col items-center justify-between p-24">
-      Hello, World!
+    <main className="h-screen w-screen">
+      <RoughCanvas />
     </main>
   );
 }

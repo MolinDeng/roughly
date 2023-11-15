@@ -18,10 +18,7 @@ export default function RootLayout({
   return (
     <html lang="en" className="light">
       <body
-        className={cn(
-          'min-h-screen font-sans antialiased grainy',
-          montserrat.className
-        )}
+        className={cn('min-h-screen antialiased grainy', montserrat.className)}
       >
         {children}
       </body>
