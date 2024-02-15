@@ -1,12 +1,12 @@
-import { RoughType } from '@/types/type';
+import { RoughTool } from '@/types/type';
 import { create } from 'zustand';
 
 export interface RoughStore {
-  drawType: RoughType;
-  setDrawType: (t: RoughType) => void;
+  currTool: RoughTool;
+  setTool: (t: RoughTool) => void;
 }
 
 export const useRoughStore = create<RoughStore>((set) => ({
-  drawType: 'line',
-  setDrawType: (t: RoughType) => set({ drawType: t }),
+  currTool: 'line',
+  setTool: (t: RoughTool) => set({ currTool: t }),
 }));

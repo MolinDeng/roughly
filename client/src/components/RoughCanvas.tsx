@@ -1,49 +1,31 @@
 'use client';
 
-import { createGrainyBg } from '@/lib/canvas-utils';
+import {
+  adjustCoords,
+  createGrainyBg,
+  createRoughElement,
+  getSelectPayload,
+} from '@/lib/rough-utils';
 import { useRoughStore } from '@/stores/rough-store';
-import { RoughElement, RoughOptions, RoughType } from '@/types/type';
+import { RoughAction, RoughElement, SelectPayload } from '@/types/type';
 import { FC, useEffect, useRef, useState } from 'react';
 import rough from 'roughjs';
-
-const generator = rough.generator();
-const roughOptions: RoughOptions = {
-  fill: 'red',
-  fillStyle: 'cross-hatch',
-  roughness: 0.5,
-};
-const createElement = (
-  type: RoughType,
-  x1: number,
-  y1: number,
-  x2: number,
-  y2: number
-): RoughElement => {
-  let drawable = null;
-  switch (type) {
-    case 'line':
-      drawable = generator.line(x1, y1, x2, y2, roughOptions);
-      break;
-    case 'rect':
-      drawable = generator.rectangle(x1, y1, x2 - x1, y2 - y1, roughOptions);
-      break;
-  }
-  return { type, x1, y1, x2, y2, drawable };
-};
 
 interface RoughCanvasProps {}
 const RoughCanvas: FC<RoughCanvasProps> = ({}) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const [drawing, setDrawing] = useState<boolean>(false);
+  const actionState = useRef<RoughAction>('idle');
+  // selected element state
+  const selectState = useRef<SelectPayload>({ x: 0, y: 0, id: -1, ele: null });
   const [elements, setElements] = useState<RoughElement[]>([]);
-  const { drawType } = useRoughStore();
+  const { currTool } = useRoughStore();
 
   // set canvas size to window size
   useEffect(() => {
     if (!canvasRef.current) return;
     canvasRef.current.width = window.innerWidth - 10; // ! Debug only
     canvasRef.current.height = window.innerHeight - 10; // ! Debug only
-  }, [canvasRef]);
+  }, [canvasRef, window]);
 
   useEffect(() => {
     if (!canvasRef.current) return;
@@ -59,27 +41,56 @@ const RoughCanvas: FC<RoughCanvasProps> = ({}) => {
   }, [canvasRef, elements]);
 
   const handleMouseDown = (event: React.MouseEvent<HTMLCanvasElement>) => {
-    setDrawing(true);
-
-    const { clientX, clientY } = event;
-    const newEle = createElement(
-      drawType,
-      clientX,
-      clientY,
-      clientX + 1,
-      clientY + 1
-    );
-    setElements([...elements, newEle]);
+    if (currTool === 'select') {
+      const { clientX, clientY } = event;
+      const payload = getSelectPayload(elements, clientX, clientY);
+      if (payload.id === -1) return;
+      actionState.current = 'moving';
+      selectState.current = payload;
+    } else {
+      actionState.current = 'drawing';
+      const { clientX: x, clientY: y } = event;
+      const newEle = createRoughElement(currTool, x, y, x, y);
+      setElements([...elements, newEle]);
+    }
   };
   const handleMouseMove = (event: React.MouseEvent<HTMLCanvasElement>) => {
-    if (!drawing) return;
-    const { clientX, clientY } = event;
-    const { type: curretType, x1, y1 } = elements[elements.length - 1];
-    const updatedEle = createElement(curretType, x1, y1, clientX, clientY);
-    setElements([...elements.slice(0, -1), updatedEle]);
+    if (currTool === 'select')
+      (event.target as HTMLElement).style.cursor =
+        getSelectPayload(elements, event.clientX, event.clientY).id === -1
+          ? 'default'
+          : 'move';
+
+    if (actionState.current === 'drawing') {
+      const { clientX, clientY } = event;
+      const { type, x1, y1 } = elements[elements.length - 1];
+      const updatedEle = createRoughElement(type, x1, y1, clientX, clientY);
+      setElements([...elements.slice(0, -1), updatedEle]);
+    } else if (actionState.current === 'moving') {
+      const { clientX, clientY } = event;
+      const { x, y, id, ele } = selectState.current;
+      if (ele === null) return;
+      const { type, x1, y1, x2, y2 } = ele;
+      elements[id] = createRoughElement(
+        type,
+        x1 + clientX - x,
+        y1 + clientY - y,
+        x2 + clientX - x,
+        y2 + clientY - y
+      );
+      setElements([...elements]);
+    }
   };
   const handleMouseUp = (event: React.MouseEvent<HTMLCanvasElement>) => {
-    setDrawing(false);
+    if (actionState.current === 'drawing') {
+      const ele = elements[elements.length - 1];
+      const { x1, y1, x2, y2 } = adjustCoords(ele);
+      const newEle = createRoughElement(ele.type, x1, y1, x2, y2);
+      setElements([...elements.slice(0, -1), newEle]);
+    }
+
+    actionState.current = 'idle';
+    selectState.current = { x: 0, y: 0, id: -1, ele: null };
   };
   return (
     <canvas
@@ -88,8 +99,6 @@ const RoughCanvas: FC<RoughCanvasProps> = ({}) => {
       onMouseMove={handleMouseMove}
       onMouseUp={handleMouseUp}
       className="border-2 border-foreground rounded-md grainy items-center" // ! Debug only
-      // width={0}
-      // height={0}
     />
   );
 };

@@ -1,18 +1,9 @@
 import { Drawable, Options } from 'roughjs/bin/core';
 
-type RoughType =
-  | 'line'
-  | 'rect'
-  | 'ellipse'
-  | 'circle'
-  | 'linearPath'
-  | 'arc'
-  | 'curve'
-  | 'polygon'
-  | 'path';
+type RoughTool = 'any' | 'select' | 'line' | 'rect';
 
 type RoughElement = {
-  type: RoughType;
+  type: RoughTool;
   x1: number;
   y1: number;
   x2: number;
@@ -20,4 +11,13 @@ type RoughElement = {
   drawable: Drawable | null;
 };
 
+type RoughAction = 'idle' | 'drawing' | 'moving';
+
 type RoughOptions = {} & Options;
+
+type SelectPayload = {
+  x: number;
+  y: number;
+  id: number;
+  ele: RoughElement | null;
+};
