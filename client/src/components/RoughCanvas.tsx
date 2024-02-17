@@ -109,6 +109,7 @@ const RoughCanvas: FC<RoughCanvasProps> = ({}) => {
       const ele = elements[elements.length - 1];
       const { x1, y1, x2, y2 } = adjustCoords(ele);
       const newEle = createRoughElement(ele.type, x1, y1, x2, y2);
+      console.log(newEle);
       setElements([...elements.slice(0, -1), newEle]);
     } else if (actionState.current === 'resize') {
       const { id, ele: oldEle } = selectState.current;
