@@ -46,6 +46,7 @@ I'm cloning the [Excalidraw](https://excalidraw.com/) project to learn more abou
 [![MongoDB](https://img.shields.io/badge/MongoDB-47A248?style=for-the-badge&logo=mongodb&logoColor=white)](https://www.mongodb.com/)
 [![OpenAI](https://img.shields.io/badge/OpenAI-FF6C37?style=for-the-badge&logo=openai&logoColor=white)](https://openai.com/)
 [![Vercel](https://img.shields.io/badge/Vercel-000000?style=for-the-badge&logo=vercel&logoColor=white)](https://vercel.com/)
+[![ShadcnUI](https://img.shields.io/badge/ShadcnUI-006CFF?style=for-the-badge&logo=shadcn&logoColor=white)](http://shadcn.com)
 
 ## Getting Started
 
