@@ -139,6 +139,19 @@ const cursorFromPosition = (pos: string | null): string => {
   return 'default';
 };
 
+const resizeElement = (
+  clientX: number,
+  clientY: number,
+  position: string,
+  ele: RoughElement
+): { x1: number; y1: number; x2: number; y2: number } => {
+  const { x1, y1, x2, y2 } = ele;
+  if (position === 'tl') return { x1: clientX, y1: clientY, x2, y2 };
+  if (position === 'tr') return { x1, y1: clientY, x2: clientX, y2 };
+  if (position === 'bl') return { x1: clientX, y1, x2, y2: clientY };
+  if (position === 'br') return { x1, y1, x2: clientX, y2: clientY };
+  return { x1, y1, x2, y2 };
+};
 export {
   createGrainyBg,
   createRoughElement,
@@ -146,4 +159,5 @@ export {
   adjustCoords,
   nullPayload,
   cursorFromPosition,
+  resizeElement,
 };

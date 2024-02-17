@@ -7,6 +7,7 @@ import {
   createRoughElement,
   getHoverPayload,
   cursorFromPosition,
+  resizeElement,
 } from '@/lib/rough-utils';
 import { useRoughStore } from '@/stores/rough-store';
 import { RoughAction, RoughElement, HoverPayload } from '@/types/type';
@@ -48,8 +49,14 @@ const RoughCanvas: FC<RoughCanvasProps> = ({}) => {
       const { clientX, clientY } = event;
       const payload = getHoverPayload(elements, clientX, clientY);
       if (payload.id === -1) return;
-      actionState.current = 'moving';
+      // * Set the selected element
       selectState.current = payload;
+      // * Update the action state
+      if (payload.position === 'inside') {
+        actionState.current = 'moving';
+      } else {
+        actionState.current = 'resize';
+      }
     } else {
       actionState.current = 'drawing';
       const { clientX: x, clientY: y } = event;
@@ -71,16 +78,28 @@ const RoughCanvas: FC<RoughCanvasProps> = ({}) => {
       setElements([...elements.slice(0, -1), updatedEle]);
     } else if (actionState.current === 'moving') {
       const { clientX, clientY } = event;
-      const { x, y, id, ele } = selectState.current;
+      const { x: hitX, y: hitY, id, ele } = selectState.current;
       if (ele === null) return;
+      // this element is the object that is created before the mouse down event
       const { type, x1, y1, x2, y2 } = ele;
       elements[id] = createRoughElement(
         type,
-        x1 + clientX - x,
-        y1 + clientY - y,
-        x2 + clientX - x,
-        y2 + clientY - y
+        x1 + clientX - hitX,
+        y1 + clientY - hitY,
+        x2 + clientX - hitX,
+        y2 + clientY - hitY
       );
+      setElements([...elements]);
+    } else if (actionState.current === 'resize') {
+      const { clientX, clientY } = event;
+      const { x, y, id, ele, position } = selectState.current;
+      const { x1, y1, x2, y2 } = resizeElement(
+        clientX,
+        clientY,
+        position!,
+        ele!
+      );
+      elements[id] = createRoughElement(ele!.type, x1, y1, x2, y2);
       setElements([...elements]);
     }
   };
@@ -91,6 +110,13 @@ const RoughCanvas: FC<RoughCanvasProps> = ({}) => {
       const { x1, y1, x2, y2 } = adjustCoords(ele);
       const newEle = createRoughElement(ele.type, x1, y1, x2, y2);
       setElements([...elements.slice(0, -1), newEle]);
+    } else if (actionState.current === 'resize') {
+      const { id, ele: oldEle } = selectState.current;
+      // ele is useless, since it is the one that is created before the mouse down event
+      const ele = elements[id];
+      const { x1, y1, x2, y2 } = adjustCoords(ele);
+      elements[id] = createRoughElement(ele.type, x1, y1, x2, y2);
+      setElements([...elements]);
     }
 
     actionState.current = 'idle';

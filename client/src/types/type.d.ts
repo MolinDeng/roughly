@@ -11,7 +11,7 @@ type RoughElement = {
   drawable: Drawable | null;
 };
 
-type RoughAction = 'idle' | 'drawing' | 'moving';
+type RoughAction = 'idle' | 'drawing' | 'moving' | 'resize';
 
 type RoughOptions = {} & Options;
 
