@@ -1,8 +1,8 @@
 import {
+  HoverPayload,
   RoughElement,
   RoughOptions,
   RoughTool,
-  SelectPayload,
 } from '@/types/type';
 import rough from 'roughjs';
 
@@ -61,29 +61,52 @@ const distance = (a: { x: number; y: number }, b: { x: number; y: number }) => {
   return Math.sqrt((a.x - b.x) ** 2 + (a.y - b.y) ** 2);
 };
 
-const isWithinElement = (x: number, y: number, ele: RoughElement): boolean => {
+const nearPoint = (
+  x: number,
+  y: number,
+  x1: number,
+  y1: number,
+  name: string
+): string | null => {
+  return Math.abs(x - x1) <= 5 && Math.abs(y - y1) <= 5 ? name : null;
+};
+
+const positionWithinElement = (
+  x: number,
+  y: number,
+  ele: RoughElement
+): string | null => {
   const { type, x1, y1, x2, y2 } = ele;
   if (type === 'line') {
     const a = { x: x1, y: y1 };
     const b = { x: x2, y: y2 };
     const c = { x, y };
     const offset = distance(a, b) - (distance(a, c) + distance(b, c));
-    return Math.abs(offset) <= 1;
+    const start = nearPoint(x, y, x1, y1, 'tl');
+    const end = nearPoint(x, y, x2, y2, 'br');
+    const inside = Math.abs(offset) <= 1 ? 'inside' : null;
+    return start || end || inside;
   } else if (type === 'rect') {
-    return x >= x1 && x <= x2 && y >= y1 && y <= y2;
+    const topLeft = nearPoint(x, y, x1, y1, 'tl');
+    const topRight = nearPoint(x, y, x2, y1, 'tr');
+    const bottomLeft = nearPoint(x, y, x1, y2, 'bl');
+    const bottomRight = nearPoint(x, y, x2, y2, 'br');
+    const inside = x >= x1 && x <= x2 && y >= y1 && y <= y2 ? 'inside' : null;
+    return topLeft || topRight || bottomLeft || bottomRight || inside;
   }
-  return false;
+  return null;
 };
 // * Not that efficient, but it works
-const getSelectPayload = (
+const getHoverPayload = (
   elements: RoughElement[],
   x: number,
   y: number
-): SelectPayload => {
-  for (let i = elements.length - 1; i >= 0; i--)
-    if (isWithinElement(x, y, elements[i]))
-      return { x, y, id: i, ele: elements[i] };
-  return { x, y, id: -1, ele: null };
+): HoverPayload => {
+  for (let i = elements.length - 1; i >= 0; i--) {
+    const pos = positionWithinElement(x, y, elements[i]);
+    if (pos !== null) return { x, y, id: i, ele: elements[i], position: pos };
+  }
+  return { x, y, id: -1, ele: null, position: null };
 };
 
 const adjustCoords = (
@@ -100,4 +123,27 @@ const adjustCoords = (
   }
   return { x1, y1, x2, y2 };
 };
-export { createGrainyBg, createRoughElement, getSelectPayload, adjustCoords };
+
+const nullPayload: HoverPayload = {
+  x: 0,
+  y: 0,
+  id: -1,
+  position: null,
+  ele: null,
+};
+
+const cursorFromPosition = (pos: string | null): string => {
+  if (pos === 'inside') return 'move';
+  if (pos === 'tl' || pos === 'br') return 'nwse-resize';
+  if (pos === 'tr' || pos === 'bl') return 'nesw-resize';
+  return 'default';
+};
+
+export {
+  createGrainyBg,
+  createRoughElement,
+  getHoverPayload,
+  adjustCoords,
+  nullPayload,
+  cursorFromPosition,
+};

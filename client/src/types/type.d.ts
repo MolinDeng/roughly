@@ -15,9 +15,10 @@ type RoughAction = 'idle' | 'drawing' | 'moving';
 
 type RoughOptions = {} & Options;
 
-type SelectPayload = {
+type HoverPayload = {
   x: number;
   y: number;
   id: number;
+  position: string | null;
   ele: RoughElement | null;
 };

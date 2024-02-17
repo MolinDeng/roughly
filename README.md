@@ -1,3 +1,7 @@
+<p align="center">
+  <h3>An Collaborative, Open-source, virtual hand-drawn style whiteboard.</h3>
+</p>
+
 ## Features
 
 ## Tech Stacks

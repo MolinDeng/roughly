@@ -1,13 +1,15 @@
 'use client';
 
 import {
+  nullPayload,
   adjustCoords,
   createGrainyBg,
   createRoughElement,
-  getSelectPayload,
+  getHoverPayload,
+  cursorFromPosition,
 } from '@/lib/rough-utils';
 import { useRoughStore } from '@/stores/rough-store';
-import { RoughAction, RoughElement, SelectPayload } from '@/types/type';
+import { RoughAction, RoughElement, HoverPayload } from '@/types/type';
 import { FC, useEffect, useRef, useState } from 'react';
 import rough from 'roughjs';
 
@@ -16,7 +18,7 @@ const RoughCanvas: FC<RoughCanvasProps> = ({}) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const actionState = useRef<RoughAction>('idle');
   // selected element state
-  const selectState = useRef<SelectPayload>({ x: 0, y: 0, id: -1, ele: null });
+  const selectState = useRef<HoverPayload>(nullPayload);
   const [elements, setElements] = useState<RoughElement[]>([]);
   const { currTool } = useRoughStore();
 
@@ -37,13 +39,14 @@ const RoughCanvas: FC<RoughCanvasProps> = ({}) => {
         roughCanvas.draw(drawable!);
       });
     };
+    // * Load elements after creating grainy background
     createGrainyBg(ctx).then(callback).catch(callback);
   }, [canvasRef, elements]);
 
   const handleMouseDown = (event: React.MouseEvent<HTMLCanvasElement>) => {
     if (currTool === 'select') {
       const { clientX, clientY } = event;
-      const payload = getSelectPayload(elements, clientX, clientY);
+      const payload = getHoverPayload(elements, clientX, clientY);
       if (payload.id === -1) return;
       actionState.current = 'moving';
       selectState.current = payload;
@@ -55,11 +58,11 @@ const RoughCanvas: FC<RoughCanvasProps> = ({}) => {
     }
   };
   const handleMouseMove = (event: React.MouseEvent<HTMLCanvasElement>) => {
-    if (currTool === 'select')
-      (event.target as HTMLElement).style.cursor =
-        getSelectPayload(elements, event.clientX, event.clientY).id === -1
-          ? 'default'
-          : 'move';
+    if (currTool === 'select') {
+      const { clientX, clientY } = event;
+      const { position } = getHoverPayload(elements, clientX, clientY);
+      (event.target as HTMLElement).style.cursor = cursorFromPosition(position);
+    }
 
     if (actionState.current === 'drawing') {
       const { clientX, clientY } = event;
@@ -82,6 +85,7 @@ const RoughCanvas: FC<RoughCanvasProps> = ({}) => {
     }
   };
   const handleMouseUp = (event: React.MouseEvent<HTMLCanvasElement>) => {
+    // * Adjust position of the element
     if (actionState.current === 'drawing') {
       const ele = elements[elements.length - 1];
       const { x1, y1, x2, y2 } = adjustCoords(ele);
@@ -90,7 +94,7 @@ const RoughCanvas: FC<RoughCanvasProps> = ({}) => {
     }
 
     actionState.current = 'idle';
-    selectState.current = { x: 0, y: 0, id: -1, ele: null };
+    selectState.current = nullPayload;
   };
   return (
     <canvas
