@@ -23,6 +23,44 @@ const RoughCanvas: FC<RoughCanvasProps> = ({}) => {
   const [elements, setElements] = useState<RoughElement[]>([]);
   const { currTool } = useRoughStore();
 
+  // Key  listener
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        console.log('Close');
+      }
+      // modifier keys
+      if (event.ctrlKey || event.metaKey) {
+        if (event.key === 'z') {
+          // ctrl + z or cmd + z
+          console.log('Undo');
+        }
+      }
+      // shift key
+      if (event.shiftKey) {
+        // shift + any key
+        console.log('shift key is pressed');
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    const handleKeyUp = (event: KeyboardEvent) => {
+      if (event.key === 'Shift') {
+        // shift + any key
+        console.log('shift key is released');
+      }
+    };
+    window.addEventListener('keyup', handleKeyUp);
+    const handleKeyPress = (event: KeyboardEvent) => {
+      console.log('key pressed');
+    };
+    // window.addEventListener('keypress', handleKeyPress);
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+      window.removeEventListener('keyup', handleKeyUp);
+      window.removeEventListener('keypress', handleKeyPress);
+    };
+  });
+
   // set canvas size to window size
   useEffect(() => {
     if (!canvasRef.current) return;

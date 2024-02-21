@@ -17,14 +17,15 @@ I'm cloning the [Excalidraw](https://excalidraw.com/) project to learn more abou
   - [x] Ellipse
   - [ ] Circle
   - [ ] More shapes using SVG or Polygon
-  - [ ] Freehand
+  - [ ] Freehand Drawing
 - [ ] Shape Manipulation
   - [x] Move
   - [x] Resize
   - [ ] Select
-  - [ ] Rotate
+  - [ ] Rotate (using Matrix ?)
   - [ ] Delete
-- [ ] OOP-refactor
+- [x] Papyrus-Paper-like Background
+- [ ] OOP-refactor (doing it now)
 - [ ] Real-time collaboration
 - [ ] LLM (OpenAI API) integration to auto-generate shapes
 - [ ] Redo / Undo
