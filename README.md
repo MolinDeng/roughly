@@ -11,6 +11,9 @@ I'm cloning the [Excalidraw](https://excalidraw.com/) project to learn more abou
 
 ## Roadmap
 
+- [x] Papyrus-Paper-like Background
+- [x] OOP-refactor
+- [x] Fix Randomness of a single shape
 - [ ] Shape Creation
   - [x] Line
   - [x] Rectangle
@@ -24,8 +27,6 @@ I'm cloning the [Excalidraw](https://excalidraw.com/) project to learn more abou
   - [ ] Select
   - [ ] Rotate (using Matrix ?)
   - [ ] Delete
-- [x] Papyrus-Paper-like Background
-- [ ] OOP-refactor (doing it now)
 - [ ] Real-time collaboration
 - [ ] LLM (OpenAI API) integration to auto-generate shapes
 - [ ] Redo / Undo
