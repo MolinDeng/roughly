@@ -1,26 +1,35 @@
 import { RoughElement } from '@/models/RoughElement';
 import { Drawable, Options } from 'roughjs/bin/core';
 
-type RoughTool = 'any' | 'select' | 'line' | 'rect' | 'ellipse';
-
-// type RoughElement = {
-//   type: RoughTool;
-//   // uuid: string;
-//   x1: number;
-//   y1: number;
-//   x2: number;
-//   y2: number;
-//   drawable: Drawable | null;
-// };
+type RoughTool =
+  | ''
+  | 'select'
+  | 'line'
+  | 'rect'
+  | 'ellipse'
+  | 'diamond'
+  | 'arrow';
 
 type CanvasState = 'idle' | 'drawing' | 'moving' | 'resize';
 
-type RoughOptions = {} & Options;
+//  hachure(default), solid, zigzag, cross-hatch, dots, dashed, or zigzag-line
+type RoughFillStyle =
+  | 'hachure'
+  | 'solid'
+  | 'zigzag'
+  | 'cross-hatch'
+  | 'dots'
+  | 'dashed'
+  | 'zigzag-line'; // TODO Some of them are not efficient to use
+
+type RoughOptions = {
+  fillStyle: RoughFillStyle;
+} & Options;
 
 type SelectedPayload = {
   hitX: number;
   hitY: number;
-  anchor: string;
+  anchor: Anchor;
   ele: RoughElement | null;
   snapshot: EleSnapshot;
 };
@@ -31,3 +40,11 @@ type EleSnapshot = {
   x2: number;
   y2: number;
 };
+
+type Point = {
+  x: number;
+  y: number;
+};
+
+// q for quadratic curve's control point
+type Anchor = 'tl' | 'tr' | 'bl' | 'br' | 'inside' | 'q' | null;

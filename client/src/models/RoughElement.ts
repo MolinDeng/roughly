@@ -1,27 +1,9 @@
-import { EleSnapshot, RoughOptions, RoughTool } from '@/types/type';
+import { Anchor, EleSnapshot, RoughOptions, RoughTool } from '@/types/type';
 import { Drawable } from 'roughjs/bin/core';
 import short from 'short-uuid';
 import rough from 'roughjs';
-
-const distance = (a: { x: number; y: number }, b: { x: number; y: number }) => {
-  return Math.sqrt((a.x - b.x) ** 2 + (a.y - b.y) ** 2);
-};
-
-const nearPoint = (
-  x: number,
-  y: number,
-  x1: number,
-  y1: number,
-  name: string
-): string | null => {
-  return Math.abs(x - x1) <= 5 && Math.abs(y - y1) <= 5 ? name : null;
-};
-
-const defaultRoughOptions: RoughOptions = {
-  fill: 'hachure',
-  fillStyle: 'cross-hatch',
-  roughness: 0.5,
-};
+import { randomStyle } from '@/lib/rough-utils';
+import { distance, isInTriangle, nearPoint } from '@/lib/math';
 
 export class RoughElement {
   type: RoughTool;
@@ -39,7 +21,7 @@ export class RoughElement {
     y1: number,
     x2: number,
     y2: number,
-    options: RoughOptions = defaultRoughOptions
+    options: RoughOptions
   ) {
     this.type = type;
     this.uuid = short.generate();
@@ -51,6 +33,7 @@ export class RoughElement {
     this.options = options;
     // fix seed for consistent hachure
     this.options.seed = Math.floor(Math.random() * 2 ** 31);
+    this.options.fillStyle = randomStyle(); // ! Debug only
   }
 
   isDrawable() {
@@ -66,19 +49,50 @@ export class RoughElement {
     this.y1 = y1;
     this.x2 = x2;
     this.y2 = y2;
-    const generator = rough.generator();
+    const g = rough.generator();
     if (this.type === 'line') {
-      this.drawable = generator.line(x1, y1, x2, y2, this.options);
+      this.drawable = g.line(x1, y1, x2, y2, this.options);
+    } else if (this.type === 'arrow') {
+      const arrowLength = Math.min(
+        20,
+        distance({ x: x1, y: y1 }, { x: x2, y: y2 }) / 4
+      );
+      const Q = { x: (x1 + x2) / 2, y: (y1 + y2) / 2 };
+      const arrowAngle = Math.atan2(y2 - Q.y, x2 - Q.x);
+      const arrowPoint1 = {
+        x: x2 - arrowLength * Math.cos(arrowAngle - Math.PI / 6),
+        y: y2 - arrowLength * Math.sin(arrowAngle - Math.PI / 6),
+      };
+      const arrowPoint2 = {
+        x: x2 - arrowLength * Math.cos(arrowAngle + Math.PI / 6),
+        y: y2 - arrowLength * Math.sin(arrowAngle + Math.PI / 6),
+      };
+      const svgPath = `
+          M ${x1} ${y1}
+          Q ${Q.x} ${Q.y} ${x2} ${y2}
+          L ${arrowPoint1.x} ${arrowPoint1.y}
+          M ${x2} ${y2}
+          L ${arrowPoint2.x} ${arrowPoint2.y}
+        `;
+
+      this.drawable = g.path(svgPath, this.options);
     } else if (this.type === 'rect') {
-      this.drawable = generator.rectangle(
-        x1,
-        y1,
-        x2 - x1,
-        y2 - y1,
+      this.drawable = g.rectangle(x1, y1, x2 - x1, y2 - y1, this.options);
+    } else if (this.type === 'diamond') {
+      const midX = (x1 + x2) / 2;
+      const midY = (y1 + y2) / 2;
+      console.log('fillStyle', this.options.fillStyle);
+      this.drawable = g.polygon(
+        [
+          [midX, y1],
+          [x2, midY],
+          [midX, y2],
+          [x1, midY],
+        ],
         this.options
       );
     } else if (this.type === 'ellipse') {
-      this.drawable = generator.ellipse(
+      this.drawable = g.ellipse(
         (x1 + x2) / 2,
         (y1 + y2) / 2,
         x2 - x1,
@@ -88,7 +102,7 @@ export class RoughElement {
     }
   }
 
-  resize(clientX: number, clientY: number, anchor: string) {
+  resize(clientX: number, clientY: number, anchor: Anchor) {
     if (anchor === 'tl') {
       this.x1 = clientX;
       this.y1 = clientY;
@@ -106,12 +120,22 @@ export class RoughElement {
   }
 
   normalize() {
+    // ! Seems there is no need to normalize the line and arrow
     if (this.type === 'line') {
-      if (this.x1 < this.x2 || (this.x1 === this.x2 && this.y1 < this.y2))
-        return;
-      const [x1, y1, x2, y2] = [this.x2, this.y2, this.x1, this.y1];
-      this.update(x1, y1, x2, y2);
-    } else if (this.type === 'rect' || this.type === 'ellipse') {
+      // if (this.x1 < this.x2 || (this.x1 === this.x2 && this.y1 < this.y2))
+      //   return;
+      // const [x1, y1, x2, y2] = [this.x2, this.y2, this.x1, this.y1];
+      // this.update(x1, y1, x2, y2);
+    } else if (this.type === 'arrow') {
+      // if (this.x1 < this.x2 || (this.x1 === this.x2 && this.y1 < this.y2))
+      //   return;
+      // const [x1, y1, x2, y2] = [this.x2, this.y2, this.x1, this.y1];
+      // this.update(x1, y1, x2, y2);
+    } else if (
+      this.type === 'rect' ||
+      this.type === 'ellipse' ||
+      this.type === 'diamond'
+    ) {
       const [xMin, xMax] = [
         Math.min(this.x1, this.x2),
         Math.max(this.x1, this.x2),
@@ -124,9 +148,9 @@ export class RoughElement {
     }
   }
 
-  anchorWithinMe(x: number, y: number): string | null {
+  anchorWithinMe(x: number, y: number): Anchor {
     const { type, x1, y1, x2, y2 } = this;
-    if (type === 'line') {
+    if (type === 'line' || type === 'arrow') {
       const a = { x: x1, y: y1 };
       const b = { x: x2, y: y2 };
       const c = { x, y };
@@ -156,29 +180,41 @@ export class RoughElement {
           ? 'inside'
           : null;
       return topLeft || topRight || bottomLeft || bottomRight || inside;
+    } else if (type === 'diamond') {
+      const topLeft = nearPoint(x, y, x1, y1, 'tl');
+      const topRight = nearPoint(x, y, x2, y1, 'tr');
+      const bottomLeft = nearPoint(x, y, x1, y2, 'bl');
+      const bottomRight = nearPoint(x, y, x2, y2, 'br');
+      const midX = (x1 + x2) / 2;
+      const midY = (y1 + y2) / 2;
+      const inside =
+        isInTriangle(
+          { x, y },
+          { x: midX, y: y1 },
+          { x: x2, y: midY },
+          { x: midX, y: y2 }
+        ) ||
+        isInTriangle(
+          { x, y },
+          { x: x1, y: midY },
+          { x: midX, y: y1 },
+          { x: midX, y: y2 }
+        )
+          ? 'inside'
+          : null;
+
+      return topLeft || topRight || bottomLeft || bottomRight || inside;
     }
     return null;
   }
 
-  static factory() {
-    return (
-      type: RoughTool,
-      x1: number,
-      y1: number,
-      x2: number = 0,
-      y2: number = 0,
-      options: RoughOptions = defaultRoughOptions
-    ) => {
-      return new RoughElement(type, x1, y1, x2, y2, options);
-    };
-  }
   // TODO serialize
-  toJson(): string {
-    return JSON.stringify(this);
-  }
+  // toJson(): string {
+  // return JSON.stringify(this);
+  // }
   // TODO deserialize
-  static fromJson(json: string): RoughElement {
-    const obj = JSON.parse(json);
-    return new RoughElement(obj.type, obj.x1, obj.y1, obj.x2, obj.y2);
-  }
+  // static fromJson(json: string): RoughElement {
+  // const obj = JSON.parse(json);
+  // return new RoughElement(obj.type, obj.x1, obj.y1, obj.x2, obj.y2);
+  // }
 }

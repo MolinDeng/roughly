@@ -4,13 +4,14 @@ import usePapyrusBg from '@/hooks/UsePapyrusBg';
 import { useWindowSize } from '@/hooks/UseWindowSize';
 import { getNullPayload, getSelectedPayload } from '@/lib/rough-utils';
 import { RoughElement } from '@/models/RoughElement';
+import { RoughFactor } from '@/models/RoughFactor';
 import { useRoughStore } from '@/stores/rough-store';
-import { CanvasState, SelectedPayload } from '@/types/type';
+import { Anchor, CanvasState, SelectedPayload } from '@/types/type';
 import { Loader } from 'lucide-react';
 import { FC, useEffect, useRef, useState } from 'react';
 import rough from 'roughjs';
 
-const cursorFromAnchor = (anchor: string | null): string => {
+const cursorFromAnchor = (anchor: Anchor): string => {
   if (anchor === 'inside') return 'move';
   if (anchor === 'tl' || anchor === 'br') return 'nwse-resize';
   if (anchor === 'tr' || anchor === 'bl') return 'nesw-resize';
@@ -82,11 +83,11 @@ const RoughCanvas: FC<RoughCanvasProps> = ({}) => {
     const { width, height } = ctx.canvas.getBoundingClientRect();
     ctx.fillRect(0, 0, width, height);
     // * Create rough canvas
-    const roughCanvas = rough.canvas(canvasRef.current);
+    const rc = rough.canvas(canvasRef.current);
     elements
       .filter((ele) => ele.isDrawable())
       .forEach(({ drawable }) => {
-        roughCanvas.draw(drawable!);
+        rc.draw(drawable!);
       });
   }, [canvasRef, elements, size, bg]);
 
@@ -106,7 +107,7 @@ const RoughCanvas: FC<RoughCanvasProps> = ({}) => {
     } else {
       canvasState.current = 'drawing';
       const { clientX: x, clientY: y } = event;
-      const newEle = RoughElement.factory()(currTool, x, y);
+      const newEle = RoughFactor.create(currTool, x, y);
       selectState.current.ele = newEle;
       setElements([...elements, newEle]);
     }

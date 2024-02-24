@@ -18,6 +18,9 @@ I'm cloning the [Excalidraw](https://excalidraw.com/) project to learn more abou
   - [x] Line
   - [x] Rectangle
   - [x] Ellipse
+  - [x] Straight Arrow (using SVG)
+  - [x] Diamond (using Polygon)
+  - [ ] Bezier Arrow (using SVG)
   - [ ] Circle
   - [ ] More shapes using SVG or Polygon
   - [ ] Freehand Drawing

@@ -1,5 +1,5 @@
 import { RoughElement } from '@/models/RoughElement';
-import { SelectedPayload } from '@/types/type';
+import { RoughFillStyle, SelectedPayload } from '@/types/type';
 
 // * Not that efficient, but it works
 const getSelectedPayload = (
@@ -25,10 +25,24 @@ const getNullPayload = (): SelectedPayload => {
   return {
     hitX: 0,
     hitY: 0,
-    anchor: '',
+    anchor: null,
     ele: null,
     snapshot: { x1: 0, y1: 0, x2: 0, y2: 0 },
   };
 };
 
-export { getSelectedPayload, getNullPayload };
+// generate a random style
+const randomStyle = () => {
+  const styles = [
+    'hachure',
+    'solid',
+    'zigzag',
+    'cross-hatch',
+    'dots',
+    'dashed',
+    'zigzag-line',
+  ];
+  return styles[Math.floor(Math.random() * styles.length)] as RoughFillStyle;
+};
+
+export { getSelectedPayload, getNullPayload, randomStyle };
