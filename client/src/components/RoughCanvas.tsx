@@ -1,13 +1,12 @@
 'use client';
 
-import {
-  getNullPayload,
-  createGrainyBg,
-  getSelectedPayload,
-} from '@/lib/rough-utils';
+import usePapyrusBg from '@/hooks/UsePapyrusBg';
+import { useWindowSize } from '@/hooks/UseWindowSize';
+import { getNullPayload, getSelectedPayload } from '@/lib/rough-utils';
 import { RoughElement } from '@/models/RoughElement';
 import { useRoughStore } from '@/stores/rough-store';
 import { CanvasState, SelectedPayload } from '@/types/type';
+import { Loader } from 'lucide-react';
 import { FC, useEffect, useRef, useState } from 'react';
 import rough from 'roughjs';
 
@@ -22,11 +21,11 @@ interface RoughCanvasProps {}
 const RoughCanvas: FC<RoughCanvasProps> = ({}) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const canvasState = useRef<CanvasState>('idle');
-  // selected element state
-  const selectState = useRef<SelectedPayload>(getNullPayload());
+  const selectState = useRef<SelectedPayload>(getNullPayload()); // selected element
   const [elements, setElements] = useState<RoughElement[]>([]);
   const { currTool } = useRoughStore();
-
+  const size = useWindowSize();
+  const { img: bg, loaded: bgLoaded } = usePapyrusBg();
   // Key  listener
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
@@ -65,28 +64,31 @@ const RoughCanvas: FC<RoughCanvasProps> = ({}) => {
     };
   });
 
-  // set canvas size to window size
-  useEffect(() => {
-    if (!canvasRef.current) return;
-    canvasRef.current.width = window.innerWidth - 10; // ! Debug only
-    canvasRef.current.height = window.innerHeight - 10; // ! Debug only
-  }, [canvasRef, window]);
-
   useEffect(() => {
     if (!canvasRef.current) return;
     const ctx = canvasRef.current.getContext('2d');
     if (!ctx) return;
+    // * Resize the canvas
+    canvasRef.current.width = size.width - 10; // ! -10 for debug only
+    canvasRef.current.height = size.height - 10; // ! -10 for debug only
+    // * Create grainy background
+    if (bgLoaded && bg) {
+      const pat = ctx.createPattern(bg, 'repeat');
+      ctx.fillStyle = pat as CanvasPattern;
+    } else {
+      // white
+      ctx.fillStyle = '#fff';
+    }
+    const { width, height } = ctx.canvas.getBoundingClientRect();
+    ctx.fillRect(0, 0, width, height);
+    // * Create rough canvas
     const roughCanvas = rough.canvas(canvasRef.current);
-    const callback = () => {
-      elements
-        .filter((ele) => ele.isDrawable())
-        .forEach(({ drawable }) => {
-          roughCanvas.draw(drawable!);
-        });
-    };
-    // * Load elements after creating grainy background
-    createGrainyBg(ctx).then(callback).catch(callback);
-  }, [canvasRef, elements]);
+    elements
+      .filter((ele) => ele.isDrawable())
+      .forEach(({ drawable }) => {
+        roughCanvas.draw(drawable!);
+      });
+  }, [canvasRef, elements, size, bg]);
 
   const handleMouseDown = (event: React.MouseEvent<HTMLCanvasElement>) => {
     if (currTool === 'select') {
@@ -159,7 +161,7 @@ const RoughCanvas: FC<RoughCanvasProps> = ({}) => {
     canvasState.current = 'idle';
     selectState.current = getNullPayload();
   };
-  return (
+  return bgLoaded ? (
     <canvas
       ref={canvasRef}
       onMouseDown={handleMouseDown}
@@ -167,6 +169,10 @@ const RoughCanvas: FC<RoughCanvasProps> = ({}) => {
       onMouseUp={handleMouseUp}
       className="border-2 border-foreground rounded-md grainy items-center" // ! Debug only
     />
+  ) : (
+    <div className="flex justify-center items-center h-screen">
+      <Loader className="h-8 w-8 animate-spin" />
+    </div>
   );
 };
 
