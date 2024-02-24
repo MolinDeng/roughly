@@ -1,11 +1,5 @@
-import {
-  HoverPayload,
-  RoughElement,
-  RoughOptions,
-  RoughTool,
-} from '@/types/type';
-import rough from 'roughjs';
-import short, { uuid } from 'short-uuid';
+import { RoughElement } from '@/models/RoughElement';
+import { SelectedPayload } from '@/types/type';
 const createGrainyBg = (ctx: CanvasRenderingContext2D) => {
   return new Promise((resolve, reject) => {
     const bg = new Image();
@@ -20,9 +14,9 @@ const createGrainyBg = (ctx: CanvasRenderingContext2D) => {
       resolve('Background image loaded successfully');
     };
     bg.onerror = () => {
-      ctx.fillStyle = '#e6f1ff';
-      const { width, height } = ctx.canvas.getBoundingClientRect();
-      ctx.fillRect(0, 0, width, height);
+      // ctx.fillStyle = '#e6f1ff';
+      // const { width, height } = ctx.canvas.getBoundingClientRect();
+      // ctx.fillRect(0, 0, width, height);
       reject(new Error('Failed to load background image'));
     };
     // const pat = ctx.createPattern(bg, 'repeat');
@@ -32,160 +26,34 @@ const createGrainyBg = (ctx: CanvasRenderingContext2D) => {
   });
 };
 
-const generator = rough.generator();
-const roughOptions: RoughOptions = {
-  fill: 'hachure',
-  fillStyle: 'cross-hatch',
-  roughness: 0.5,
-};
-const createRoughElement = (
-  type: RoughTool,
-  x1: number,
-  y1: number,
-  x2: number,
-  y2: number
-): RoughElement => {
-  let drawable = null;
-  switch (type) {
-    case 'line':
-      drawable = generator.line(x1, y1, x2, y2, roughOptions);
-      break;
-    case 'rect':
-      drawable = generator.rectangle(x1, y1, x2 - x1, y2 - y1, roughOptions);
-      break;
-    case 'ellipse':
-      drawable = generator.ellipse(
-        (x1 + x2) / 2,
-        (y1 + y2) / 2,
-        x2 - x1,
-        y2 - y1,
-        roughOptions
-      );
-      break;
-  }
-  const uuid = short.generate();
-  return { type, x1, y1, x2, y2, drawable };
-};
-
-const distance = (a: { x: number; y: number }, b: { x: number; y: number }) => {
-  return Math.sqrt((a.x - b.x) ** 2 + (a.y - b.y) ** 2);
-};
-
-const nearPoint = (
-  x: number,
-  y: number,
-  x1: number,
-  y1: number,
-  name: string
-): string | null => {
-  return Math.abs(x - x1) <= 5 && Math.abs(y - y1) <= 5 ? name : null;
-};
-
-const positionWithinElement = (
-  x: number,
-  y: number,
-  ele: RoughElement
-): string | null => {
-  const { type, x1, y1, x2, y2 } = ele;
-  if (type === 'line') {
-    const a = { x: x1, y: y1 };
-    const b = { x: x2, y: y2 };
-    const c = { x, y };
-    const offset = distance(a, b) - (distance(a, c) + distance(b, c));
-    const start = nearPoint(x, y, x1, y1, 'tl');
-    const end = nearPoint(x, y, x2, y2, 'br');
-    const inside = Math.abs(offset) <= 1 ? 'inside' : null;
-    return start || end || inside;
-  } else if (type === 'rect') {
-    const topLeft = nearPoint(x, y, x1, y1, 'tl');
-    const topRight = nearPoint(x, y, x2, y1, 'tr');
-    const bottomLeft = nearPoint(x, y, x1, y2, 'bl');
-    const bottomRight = nearPoint(x, y, x2, y2, 'br');
-    const inside = x >= x1 && x <= x2 && y >= y1 && y <= y2 ? 'inside' : null;
-    return topLeft || topRight || bottomLeft || bottomRight || inside;
-  } else if (type === 'ellipse') {
-    const topLeft = nearPoint(x, y, x1, y1, 'tl');
-    const topRight = nearPoint(x, y, x2, y1, 'tr');
-    const bottomLeft = nearPoint(x, y, x1, y2, 'bl');
-    const bottomRight = nearPoint(x, y, x2, y2, 'br');
-    // TODO: Maybe just use the rectangle formula for the ellipse
-    const center = { x: (x1 + x2) / 2, y: (y1 + y2) / 2 };
-    const rx = Math.abs(x2 - x1) / 2;
-    const ry = Math.abs(y2 - y1) / 2;
-    const inside =
-      (x - center.x) ** 2 / rx ** 2 + (y - center.y) ** 2 / ry ** 2 <= 1
-        ? 'inside'
-        : null;
-    return topLeft || topRight || bottomLeft || bottomRight || inside;
-  }
-  return null;
-};
 // * Not that efficient, but it works
-const getHoverPayload = (
+const getSelectedPayload = (
   elements: RoughElement[],
-  x: number,
-  y: number
-): HoverPayload => {
+  hitX: number,
+  hitY: number
+): SelectedPayload => {
   for (let i = elements.length - 1; i >= 0; i--) {
-    const pos = positionWithinElement(x, y, elements[i]);
-    if (pos !== null) return { x, y, id: i, ele: elements[i], position: pos };
+    const anchor = elements[i].anchorWithinMe(hitX, hitY);
+    if (anchor !== null)
+      return {
+        hitX,
+        hitY,
+        anchor,
+        ele: elements[i],
+        snapshot: elements[i].getSnapshot(),
+      };
   }
-  return { x, y, id: -1, ele: null, position: null };
+  return getNullPayload();
 };
 
-const adjustCoords = (
-  ele: RoughElement
-): { x1: number; y1: number; x2: number; y2: number } => {
-  const { type, x1, y1, x2, y2 } = ele;
-  if (type === 'line') {
-    if (x1 < x2 || (x1 === x2 && y1 < y2)) return { x1, y1, x2, y2 };
-    return { x1: x2, y1: y2, x2: x1, y2: y1 };
-  } else if (type === 'rect') {
-    const [xMin, xMax] = [Math.min(x1, x2), Math.max(x1, x2)];
-    const [yMin, yMax] = [Math.min(y1, y2), Math.max(y1, y2)];
-    return { x1: xMin, y1: yMin, x2: xMax, y2: yMax };
-  } else if (type === 'ellipse') {
-    const [xMin, xMax] = [Math.min(x1, x2), Math.max(x1, x2)];
-    const [yMin, yMax] = [Math.min(y1, y2), Math.max(y1, y2)];
-    return { x1: xMin, y1: yMin, x2: xMax, y2: yMax };
-  }
-  return { x1, y1, x2, y2 };
+const getNullPayload = (): SelectedPayload => {
+  return {
+    hitX: 0,
+    hitY: 0,
+    anchor: '',
+    ele: null,
+    snapshot: { x1: 0, y1: 0, x2: 0, y2: 0 },
+  };
 };
 
-const nullPayload: HoverPayload = {
-  x: 0,
-  y: 0,
-  id: -1,
-  position: null,
-  ele: null,
-};
-
-const cursorFromPosition = (pos: string | null): string => {
-  if (pos === 'inside') return 'move';
-  if (pos === 'tl' || pos === 'br') return 'nwse-resize';
-  if (pos === 'tr' || pos === 'bl') return 'nesw-resize';
-  return 'default';
-};
-
-const resizeElement = (
-  clientX: number,
-  clientY: number,
-  position: string,
-  ele: RoughElement
-): { x1: number; y1: number; x2: number; y2: number } => {
-  const { x1, y1, x2, y2 } = ele;
-  if (position === 'tl') return { x1: clientX, y1: clientY, x2, y2 };
-  if (position === 'tr') return { x1, y1: clientY, x2: clientX, y2 };
-  if (position === 'bl') return { x1: clientX, y1, x2, y2: clientY };
-  if (position === 'br') return { x1, y1, x2: clientX, y2: clientY };
-  return { x1, y1, x2, y2 };
-};
-export {
-  createGrainyBg,
-  createRoughElement,
-  getHoverPayload,
-  adjustCoords,
-  nullPayload,
-  cursorFromPosition,
-  resizeElement,
-};
+export { createGrainyBg, getSelectedPayload, getNullPayload };

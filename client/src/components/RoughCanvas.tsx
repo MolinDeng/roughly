@@ -1,25 +1,29 @@
 'use client';
 
 import {
-  nullPayload,
-  adjustCoords,
+  getNullPayload,
   createGrainyBg,
-  createRoughElement,
-  getHoverPayload,
-  cursorFromPosition,
-  resizeElement,
+  getSelectedPayload,
 } from '@/lib/rough-utils';
+import { RoughElement } from '@/models/RoughElement';
 import { useRoughStore } from '@/stores/rough-store';
-import { RoughAction, RoughElement, HoverPayload } from '@/types/type';
+import { CanvasState, SelectedPayload } from '@/types/type';
 import { FC, useEffect, useRef, useState } from 'react';
 import rough from 'roughjs';
+
+const cursorFromAnchor = (anchor: string | null): string => {
+  if (anchor === 'inside') return 'move';
+  if (anchor === 'tl' || anchor === 'br') return 'nwse-resize';
+  if (anchor === 'tr' || anchor === 'bl') return 'nesw-resize';
+  return 'default';
+};
 
 interface RoughCanvasProps {}
 const RoughCanvas: FC<RoughCanvasProps> = ({}) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const actionState = useRef<RoughAction>('idle');
+  const canvasState = useRef<CanvasState>('idle');
   // selected element state
-  const selectState = useRef<HoverPayload>(nullPayload);
+  const selectState = useRef<SelectedPayload>(getNullPayload());
   const [elements, setElements] = useState<RoughElement[]>([]);
   const { currTool } = useRoughStore();
 
@@ -27,7 +31,7 @@ const RoughCanvas: FC<RoughCanvasProps> = ({}) => {
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
       if (event.key === 'Escape') {
-        console.log('Close');
+        console.log('Elements: ', elements);
       }
       // modifier keys
       if (event.ctrlKey || event.metaKey) {
@@ -74,9 +78,11 @@ const RoughCanvas: FC<RoughCanvasProps> = ({}) => {
     if (!ctx) return;
     const roughCanvas = rough.canvas(canvasRef.current);
     const callback = () => {
-      elements.forEach(({ drawable }) => {
-        roughCanvas.draw(drawable!);
-      });
+      elements
+        .filter((ele) => ele.isDrawable())
+        .forEach(({ drawable }) => {
+          roughCanvas.draw(drawable!);
+        });
     };
     // * Load elements after creating grainy background
     createGrainyBg(ctx).then(callback).catch(callback);
@@ -85,81 +91,73 @@ const RoughCanvas: FC<RoughCanvasProps> = ({}) => {
   const handleMouseDown = (event: React.MouseEvent<HTMLCanvasElement>) => {
     if (currTool === 'select') {
       const { clientX, clientY } = event;
-      const payload = getHoverPayload(elements, clientX, clientY);
-      if (payload.id === -1) return;
+      const payload = getSelectedPayload(elements, clientX, clientY);
+      if (payload.ele === null) return;
       // * Set the selected element
       selectState.current = payload;
       // * Update the action state
-      if (payload.position === 'inside') {
-        actionState.current = 'moving';
+      if (payload.anchor === 'inside') {
+        canvasState.current = 'moving';
       } else {
-        actionState.current = 'resize';
+        canvasState.current = 'resize';
       }
     } else {
-      actionState.current = 'drawing';
+      canvasState.current = 'drawing';
       const { clientX: x, clientY: y } = event;
-      const newEle = createRoughElement(currTool, x, y, x, y);
+      const newEle = RoughElement.factory()(currTool, x, y);
+      selectState.current.ele = newEle;
       setElements([...elements, newEle]);
     }
   };
   const handleMouseMove = (event: React.MouseEvent<HTMLCanvasElement>) => {
     if (currTool === 'select') {
       const { clientX, clientY } = event;
-      const { position } = getHoverPayload(elements, clientX, clientY);
-      (event.target as HTMLElement).style.cursor = cursorFromPosition(position);
+      const { anchor } = getSelectedPayload(elements, clientX, clientY);
+      (event.target as HTMLElement).style.cursor = cursorFromAnchor(anchor);
     }
 
-    if (actionState.current === 'drawing') {
+    if (canvasState.current === 'drawing') {
       const { clientX, clientY } = event;
-      const { type, x1, y1 } = elements[elements.length - 1];
-      const updatedEle = createRoughElement(type, x1, y1, clientX, clientY);
-      setElements([...elements.slice(0, -1), updatedEle]);
-    } else if (actionState.current === 'moving') {
+      const ele = selectState.current.ele!;
+      ele.update(ele.x1, ele.y1, clientX, clientY);
+      setElements([...elements]);
+    } else if (canvasState.current === 'moving') {
       const { clientX, clientY } = event;
-      const { x: hitX, y: hitY, id, ele } = selectState.current;
-      if (ele === null) return;
+      const { hitX, hitY, ele, snapshot } = selectState.current;
       // this element is the object that is created before the mouse down event
-      const { type, x1, y1, x2, y2 } = ele;
-      elements[id] = createRoughElement(
-        type,
-        x1 + clientX - hitX,
-        y1 + clientY - hitY,
-        x2 + clientX - hitX,
-        y2 + clientY - hitY
+      ele!.update(
+        snapshot.x1 + clientX - hitX,
+        snapshot.y1 + clientY - hitY,
+        snapshot.x2 + clientX - hitX,
+        snapshot.y2 + clientY - hitY
       );
       setElements([...elements]);
-    } else if (actionState.current === 'resize') {
+    } else if (canvasState.current === 'resize') {
       const { clientX, clientY } = event;
-      const { x, y, id, ele, position } = selectState.current;
-      const { x1, y1, x2, y2 } = resizeElement(
-        clientX,
-        clientY,
-        position!,
-        ele!
-      );
-      elements[id] = createRoughElement(ele!.type, x1, y1, x2, y2);
+      const { ele, anchor } = selectState.current;
+      ele!.resize(clientX, clientY, anchor);
       setElements([...elements]);
     }
   };
   const handleMouseUp = (event: React.MouseEvent<HTMLCanvasElement>) => {
     // * Adjust position of the element
-    if (actionState.current === 'drawing') {
-      const ele = elements[elements.length - 1];
-      const { x1, y1, x2, y2 } = adjustCoords(ele);
-      const newEle = createRoughElement(ele.type, x1, y1, x2, y2);
-      console.log(newEle);
-      setElements([...elements.slice(0, -1), newEle]);
-    } else if (actionState.current === 'resize') {
-      const { id, ele: oldEle } = selectState.current;
-      // ele is useless, since it is the one that is created before the mouse down event
-      const ele = elements[id];
-      const { x1, y1, x2, y2 } = adjustCoords(ele);
-      elements[id] = createRoughElement(ele.type, x1, y1, x2, y2);
+    if (canvasState.current === 'drawing') {
+      const ele = selectState.current.ele!;
+      if (ele.isDrawable()) {
+        ele.normalize();
+        setElements([...elements]);
+      }
+    } else if (canvasState.current === 'resize') {
+      const ele = selectState.current.ele!;
+      ele.normalize();
       setElements([...elements]);
     }
 
-    actionState.current = 'idle';
-    selectState.current = nullPayload;
+    // * Filter out the elements that are not drawable
+    setElements([...elements.filter((ele) => ele.isDrawable())]);
+    // * Reset the canvas state
+    canvasState.current = 'idle';
+    selectState.current = getNullPayload();
   };
   return (
     <canvas
