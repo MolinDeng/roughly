@@ -14,14 +14,15 @@ I'm cloning the [Excalidraw](https://excalidraw.com/) project to learn more abou
 - [x] Papyrus-Paper-like Background
 - [x] OOP-refactor
 - [x] Fix Randomness of a single shape
+- [ ] Draw Gizmo when a shape is selected
 - [ ] Shape Creation
   - [x] Line
   - [x] Rectangle
   - [x] Ellipse
   - [x] Straight Arrow (using SVG)
   - [x] Diamond (using Polygon)
-  - [ ] Bezier Arrow (using SVG)
-  - [ ] Circle
+  - [x] Bezier Arrow (using SVG)
+  - [ ] Circle (pressing Shift while drawing Ellipse)
   - [ ] More shapes using SVG or Polygon
   - [ ] Freehand Drawing
 - [ ] Shape Manipulation

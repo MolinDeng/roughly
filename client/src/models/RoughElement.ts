@@ -13,7 +13,13 @@ export class RoughElement {
   x2: number;
   y2: number;
   drawable: Drawable | null;
+  gizmo: Drawable | null;
   options: RoughOptions;
+  // * For moving functionality
+  private snapshot?: EleSnapshot;
+  // * For arrow only
+  qx?: number;
+  qy?: number;
 
   constructor(
     type: RoughTool,
@@ -30,6 +36,7 @@ export class RoughElement {
     this.x2 = x2;
     this.y2 = y2;
     this.drawable = null;
+    this.gizmo = null;
     this.options = options;
     // fix seed for consistent hachure
     this.options.seed = Math.floor(Math.random() * 2 ** 31);
@@ -39,16 +46,24 @@ export class RoughElement {
   isDrawable() {
     return this.drawable !== null;
   }
-
-  getSnapshot(): EleSnapshot {
-    return { x1: this.x1, y1: this.y1, x2: this.x2, y2: this.y2 };
+  // area smaller than 10 is not visible
+  isVisible() {
+    return Math.abs(this.x2 - this.x1) * Math.abs(this.y2 - this.y1) > 10;
   }
 
-  update(x1: number, y1: number, x2: number, y2: number) {
-    this.x1 = x1;
-    this.y1 = y1;
-    this.x2 = x2;
-    this.y2 = y2;
+  getSnapshot(): EleSnapshot {
+    return {
+      x1: this.x1,
+      y1: this.y1,
+      x2: this.x2,
+      y2: this.y2,
+      qx: this.qx,
+      qy: this.qy,
+    };
+  }
+
+  private render() {
+    const { x1, y1, x2, y2 } = this;
     const g = rough.generator();
     if (this.type === 'line') {
       this.drawable = g.line(x1, y1, x2, y2, this.options);
@@ -57,7 +72,7 @@ export class RoughElement {
         20,
         distance({ x: x1, y: y1 }, { x: x2, y: y2 }) / 4
       );
-      const Q = { x: (x1 + x2) / 2, y: (y1 + y2) / 2 };
+      const Q = { x: this.qx!, y: this.qy! };
       const arrowAngle = Math.atan2(y2 - Q.y, x2 - Q.x);
       const arrowPoint1 = {
         x: x2 - arrowLength * Math.cos(arrowAngle - Math.PI / 6),
@@ -102,7 +117,31 @@ export class RoughElement {
     }
   }
 
-  resize(clientX: number, clientY: number, anchor: Anchor) {
+  onDraw(x2: number, y2: number) {
+    // x1 and y1 are the starting point, remain unchanged
+    this.x2 = x2;
+    this.y2 = y2;
+    if (this.type === 'arrow') {
+      this.qx = (this.x1 + x2) / 2;
+      this.qy = (this.y1 + y2) / 2;
+    }
+    this.render();
+  }
+
+  onMove(dx: number, dy: number) {
+    const { x1, y1, x2, y2, qx, qy } = this.snapshot!;
+    this.x1 = x1 + dx;
+    this.y1 = y1 + dy;
+    this.x2 = x2 + dx;
+    this.y2 = y2 + dy;
+    if (this.type === 'arrow') {
+      this.qx! = qx! + dx;
+      this.qy! = qy! + dy;
+    }
+    this.render();
+  }
+
+  onResize(clientX: number, clientY: number, anchor: Anchor) {
     if (anchor === 'tl') {
       this.x1 = clientX;
       this.y1 = clientY;
@@ -115,11 +154,14 @@ export class RoughElement {
     } else if (anchor === 'br') {
       this.x2 = clientX;
       this.y2 = clientY;
+    } else if (anchor === 'q') {
+      this.qx = clientX;
+      this.qy = clientY;
     }
-    this.update(this.x1, this.y1, this.x2, this.y2);
+    this.render();
   }
 
-  normalize() {
+  onNormalize() {
     // ! Seems there is no need to normalize the line and arrow
     if (this.type === 'line') {
       // if (this.x1 < this.x2 || (this.x1 === this.x2 && this.y1 < this.y2))
@@ -144,13 +186,21 @@ export class RoughElement {
         Math.min(this.y1, this.y2),
         Math.max(this.y1, this.y2),
       ];
-      this.update(xMin, yMin, xMax, yMax);
+      this.x1 = xMin;
+      this.y1 = yMin;
+      this.x2 = xMax;
+      this.y2 = yMax;
+      this.render();
     }
   }
 
+  onSelect() {
+    this.snapshot = this.getSnapshot();
+  }
+
   anchorWithinMe(x: number, y: number): Anchor {
-    const { type, x1, y1, x2, y2 } = this;
-    if (type === 'line' || type === 'arrow') {
+    const { type, x1, y1, x2, y2, qx, qy } = this;
+    if (type === 'line') {
       const a = { x: x1, y: y1 };
       const b = { x: x2, y: y2 };
       const c = { x, y };
@@ -159,6 +209,16 @@ export class RoughElement {
       const end = nearPoint(x, y, x2, y2, 'br');
       const inside = Math.abs(offset) <= 1 ? 'inside' : null;
       return start || end || inside;
+    } else if (type === 'arrow') {
+      const a = { x: x1, y: y1 };
+      const b = { x: x2, y: y2 };
+      const c = { x, y };
+      const offset = distance(a, b) - (distance(a, c) + distance(b, c));
+      const start = nearPoint(x, y, x1, y1, 'tl');
+      const end = nearPoint(x, y, x2, y2, 'br');
+      const quadratic = nearPoint(x, y, qx!, qy!, 'q');
+      const inside = Math.abs(offset) <= 1 ? 'inside' : null;
+      return quadratic || start || end || inside;
     } else if (type === 'rect') {
       const topLeft = nearPoint(x, y, x1, y1, 'tl');
       const topRight = nearPoint(x, y, x2, y1, 'tr');

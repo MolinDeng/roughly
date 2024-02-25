@@ -15,6 +15,7 @@ const cursorFromAnchor = (anchor: Anchor): string => {
   if (anchor === 'inside') return 'move';
   if (anchor === 'tl' || anchor === 'br') return 'nwse-resize';
   if (anchor === 'tr' || anchor === 'bl') return 'nesw-resize';
+  if (anchor === 'q') return 'pointer';
   return 'default';
 };
 
@@ -89,6 +90,7 @@ const RoughCanvas: FC<RoughCanvasProps> = ({}) => {
       .forEach(({ drawable }) => {
         rc.draw(drawable!);
       });
+    // TODO Draw the Gizmo for the selected element
   }, [canvasRef, elements, size, bg]);
 
   const handleMouseDown = (event: React.MouseEvent<HTMLCanvasElement>) => {
@@ -100,6 +102,7 @@ const RoughCanvas: FC<RoughCanvasProps> = ({}) => {
       selectState.current = payload;
       // * Update the action state
       if (payload.anchor === 'inside') {
+        payload.ele.onSelect();
         canvasState.current = 'moving';
       } else {
         canvasState.current = 'resize';
@@ -122,23 +125,18 @@ const RoughCanvas: FC<RoughCanvasProps> = ({}) => {
     if (canvasState.current === 'drawing') {
       const { clientX, clientY } = event;
       const ele = selectState.current.ele!;
-      ele.update(ele.x1, ele.y1, clientX, clientY);
+      ele.onDraw(clientX, clientY);
       setElements([...elements]);
     } else if (canvasState.current === 'moving') {
       const { clientX, clientY } = event;
-      const { hitX, hitY, ele, snapshot } = selectState.current;
+      const { hitX, hitY, ele } = selectState.current;
       // this element is the object that is created before the mouse down event
-      ele!.update(
-        snapshot.x1 + clientX - hitX,
-        snapshot.y1 + clientY - hitY,
-        snapshot.x2 + clientX - hitX,
-        snapshot.y2 + clientY - hitY
-      );
+      ele!.onMove(clientX - hitX, clientY - hitY);
       setElements([...elements]);
     } else if (canvasState.current === 'resize') {
       const { clientX, clientY } = event;
       const { ele, anchor } = selectState.current;
-      ele!.resize(clientX, clientY, anchor);
+      ele!.onResize(clientX, clientY, anchor);
       setElements([...elements]);
     }
   };
@@ -147,17 +145,19 @@ const RoughCanvas: FC<RoughCanvasProps> = ({}) => {
     if (canvasState.current === 'drawing') {
       const ele = selectState.current.ele!;
       if (ele.isDrawable()) {
-        ele.normalize();
+        ele.onNormalize();
         setElements([...elements]);
       }
     } else if (canvasState.current === 'resize') {
       const ele = selectState.current.ele!;
-      ele.normalize();
+      ele.onNormalize();
       setElements([...elements]);
     }
 
-    // * Filter out the elements that are not drawable
-    setElements([...elements.filter((ele) => ele.isDrawable())]);
+    // * Filter out the elements that are not drawable or not visible
+    setElements([
+      ...elements.filter((ele) => ele.isDrawable() && ele.isVisible()),
+    ]);
     // * Reset the canvas state
     canvasState.current = 'idle';
     selectState.current = getNullPayload();
@@ -168,7 +168,7 @@ const RoughCanvas: FC<RoughCanvasProps> = ({}) => {
       onMouseDown={handleMouseDown}
       onMouseMove={handleMouseMove}
       onMouseUp={handleMouseUp}
-      className="border-2 border-foreground rounded-md grainy items-center" // ! Debug only
+      className="border-2 border-foreground rounded-md" // ! Debug only
     />
   ) : (
     <div className="flex justify-center items-center h-screen">

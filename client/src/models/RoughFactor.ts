@@ -1,12 +1,15 @@
 import { RoughOptions, RoughTool } from '@/types/type';
 import { RoughElement } from './RoughElement';
-import { RArrow } from './derived/RArrow';
 
 const defaultRoughOptions: RoughOptions = {
-  fill: 'hachure',
-  fillStyle: 'dots',
+  fill: 'rgba(255,0,200,0.2)',
+  fillStyle: 'hachure',
+  fillWeight: 3, // thicker lines for hachure
   roughness: 0.5,
   strokeWidth: 1,
+  hachureAngle: 60, // angle of hachure,
+  hachureGap: 8,
+  simplification: 0.5, // useful for AI-generated SVG
 };
 
 export class RoughFactor {

@@ -18,7 +18,7 @@ type RoughFillStyle =
   | 'solid'
   | 'zigzag'
   | 'cross-hatch'
-  | 'dots'
+  // | 'dots' // costly
   | 'dashed'
   | 'zigzag-line'; // TODO Some of them are not efficient to use
 
@@ -31,7 +31,6 @@ type SelectedPayload = {
   hitY: number;
   anchor: Anchor;
   ele: RoughElement | null;
-  snapshot: EleSnapshot;
 };
 
 type EleSnapshot = {
@@ -39,6 +38,8 @@ type EleSnapshot = {
   y1: number;
   x2: number;
   y2: number;
+  qx?: number; // for arrow only
+  qy?: number; // for arrow onlys
 };
 
 type Point = {

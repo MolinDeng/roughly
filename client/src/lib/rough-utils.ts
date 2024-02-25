@@ -15,7 +15,6 @@ const getSelectedPayload = (
         hitY,
         anchor,
         ele: elements[i],
-        snapshot: elements[i].getSnapshot(),
       };
   }
   return getNullPayload();
@@ -27,7 +26,6 @@ const getNullPayload = (): SelectedPayload => {
     hitY: 0,
     anchor: null,
     ele: null,
-    snapshot: { x1: 0, y1: 0, x2: 0, y2: 0 },
   };
 };
 
@@ -38,7 +36,7 @@ const randomStyle = () => {
     'solid',
     'zigzag',
     'cross-hatch',
-    'dots',
+    // 'dots',
     'dashed',
     'zigzag-line',
   ];
