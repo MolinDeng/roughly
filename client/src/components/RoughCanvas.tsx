@@ -10,6 +10,7 @@ import { Anchor, CanvasState, SelectedPayload } from '@/types/type';
 import { Loader } from 'lucide-react';
 import { FC, useEffect, useRef, useState } from 'react';
 import rough from 'roughjs';
+import { Drawable } from 'roughjs/bin/core';
 
 const cursorFromAnchor = (anchor: Anchor): string => {
   if (anchor === 'inside') return 'move';
@@ -25,10 +26,12 @@ const RoughCanvas: FC<RoughCanvasProps> = ({}) => {
   const canvasState = useRef<CanvasState>('idle');
   const selectState = useRef<SelectedPayload>(getNullPayload()); // selected element
   const [elements, setElements] = useState<RoughElement[]>([]);
+  const [gizmo, setGizmo] = useState<Drawable[]>([]);
+
   const { currTool } = useRoughStore();
   const size = useWindowSize();
   const { img: bg, loaded: bgLoaded } = usePapyrusBg();
-  // Key  listener
+  // Key listener
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
       if (event.key === 'Escape') {
@@ -90,8 +93,9 @@ const RoughCanvas: FC<RoughCanvasProps> = ({}) => {
       .forEach(({ drawable }) => {
         rc.draw(drawable!);
       });
-    // TODO Draw the Gizmo for the selected element
-  }, [canvasRef, elements, size, bg]);
+    // Draw the Gizmo for the selected element
+    gizmo.forEach((g) => rc.draw(g));
+  }, [canvasRef, elements, size, bg, gizmo]);
 
   const handleMouseDown = (event: React.MouseEvent<HTMLCanvasElement>) => {
     if (currTool === 'select') {
@@ -102,7 +106,7 @@ const RoughCanvas: FC<RoughCanvasProps> = ({}) => {
       selectState.current = payload;
       // * Update the action state
       if (payload.anchor === 'inside') {
-        payload.ele.onSelect();
+        payload.ele.onSelect(); // * Save the snapshot
         canvasState.current = 'moving';
       } else {
         canvasState.current = 'resize';
@@ -118,8 +122,13 @@ const RoughCanvas: FC<RoughCanvasProps> = ({}) => {
   const handleMouseMove = (event: React.MouseEvent<HTMLCanvasElement>) => {
     if (currTool === 'select') {
       const { clientX, clientY } = event;
-      const { anchor } = getSelectedPayload(elements, clientX, clientY);
+      const { anchor, ele } = getSelectedPayload(elements, clientX, clientY);
       (event.target as HTMLElement).style.cursor = cursorFromAnchor(anchor);
+      if (ele !== null) {
+        setGizmo(ele.getGizmo());
+      } else if (gizmo.length > 0) {
+        setGizmo([]);
+      }
     }
 
     if (canvasState.current === 'drawing') {
@@ -142,16 +151,12 @@ const RoughCanvas: FC<RoughCanvasProps> = ({}) => {
   };
   const handleMouseUp = (event: React.MouseEvent<HTMLCanvasElement>) => {
     // * Adjust position of the element
-    if (canvasState.current === 'drawing') {
+    if (canvasState.current === 'drawing' || canvasState.current === 'resize') {
       const ele = selectState.current.ele!;
-      if (ele.isDrawable()) {
+      if (ele.isDrawable() && ele.isVisible()) {
         ele.onNormalize();
         setElements([...elements]);
       }
-    } else if (canvasState.current === 'resize') {
-      const ele = selectState.current.ele!;
-      ele.onNormalize();
-      setElements([...elements]);
     }
 
     // * Filter out the elements that are not drawable or not visible
@@ -162,6 +167,7 @@ const RoughCanvas: FC<RoughCanvasProps> = ({}) => {
     canvasState.current = 'idle';
     selectState.current = getNullPayload();
   };
+
   return bgLoaded ? (
     <canvas
       ref={canvasRef}

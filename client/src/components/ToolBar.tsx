@@ -26,7 +26,7 @@ export function ToolBar() {
         }}
       >
         <ToggleGroupItem value="select" aria-label="Select object">
-          <MousePointer className="h-3 w-3 " />
+          <MousePointer className="h-3 w-3" />
         </ToggleGroupItem>
         <ToggleGroupItem value="line" aria-label="Toggle line">
           <Minus className="h-3 w-3" />

@@ -62,6 +62,68 @@ export class RoughElement {
     };
   }
 
+  getGizmo(): Drawable[] {
+    const g = rough.generator();
+    let { x1, y1, x2, y2, type } = this;
+    if (type === 'rect' || type === 'ellipse' || type === 'diamond') {
+      // expand the rectangle a little bit
+      [x1, x2, y1, y2] = [
+        Math.min(x1, x2),
+        Math.max(x1, x2),
+        Math.min(y1, y2),
+        Math.max(y1, y2),
+      ];
+      const [x1p, y1p, x2p, y2p] = [x1 - 5, y1 - 5, x2 + 5, y2 + 5];
+      // draw a rectangle using polygon
+      const opt1 = {
+        stroke: 'black',
+        strokeWidth: 0.5,
+        roughness: 0,
+        strokeLineDash: [5, 5],
+      };
+      const gizmo = g.rectangle(x1p, y1p, x2p - x1p, y2p - y1p, opt1);
+      // draw control points
+      const opt2 = {
+        stroke: 'black',
+        fillStyle: 'solid',
+        fill: 'purple',
+        strokeWidth: 0.5,
+        roughness: 0,
+      };
+      const p1 = g.circle(x1p, y1p, 5, opt2);
+      const p2 = g.circle(x2p, y1p, 5, opt2);
+      const p3 = g.circle(x2p, y2p, 5, opt2);
+      const p4 = g.circle(x1p, y2p, 5, opt2);
+      return [gizmo, p1, p2, p3, p4];
+    } else if (type === 'arrow') {
+      // draw three control points
+      const opt = {
+        stroke: 'black',
+        fillStyle: 'solid',
+        fill: 'purple',
+        strokeWidth: 0.5,
+        roughness: 0,
+      };
+      const p1 = g.circle(x1, y1, 8, opt);
+      const p2 = g.circle(x2, y2, 8, opt);
+      const p3 = g.circle(this.qx!, this.qy!, 8, opt);
+      return [p1, p2, p3];
+    } else if (type === 'line') {
+      // draw two control points
+      const opt = {
+        stroke: 'black',
+        fillStyle: 'solid',
+        fill: 'purple',
+        strokeWidth: 0.5,
+        roughness: 0,
+      };
+      const p1 = g.circle(x1, y1, 8, opt);
+      const p2 = g.circle(x2, y2, 8, opt);
+      return [p1, p2];
+    }
+    return [];
+  }
+
   private render() {
     const { x1, y1, x2, y2 } = this;
     const g = rough.generator();
@@ -190,7 +252,7 @@ export class RoughElement {
       this.y1 = yMin;
       this.x2 = xMax;
       this.y2 = yMax;
-      this.render();
+      // this.render();
     }
   }
 
