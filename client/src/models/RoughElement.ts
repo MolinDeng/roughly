@@ -48,7 +48,7 @@ export class RoughElement {
   }
   // area smaller than 10 is not visible
   isVisible() {
-    return Math.abs(this.x2 - this.x1) * Math.abs(this.y2 - this.y1) > 10;
+    return Math.abs(this.x2 - this.x1) > 3 && Math.abs(this.y2 - this.y1) > 3;
   }
 
   getSnapshot(): EleSnapshot {
@@ -102,16 +102,15 @@ export class RoughElement {
       const p3 = g.circle(this.qx!, this.qy!, 8, opt2);
       if (Math.abs(slope(x1, y1, x2, y2) - slope(x1, y1, qx!, qy!)) < 0.15)
         return [p1, p2, p3];
-      const [xMin, xMax] = [
-        Math.min(x1, Math.min(x2, qx!)) - 5,
-        Math.max(x1, Math.max(x2, qx!)) + 5,
-      ];
-      const [yMin, yMax] = [
-        Math.min(y1, Math.min(y2, qy!)) - 5,
-        Math.max(y1, Math.max(y2, qy!)) + 5,
-      ];
-      const rect = g.rectangle(xMin, yMin, xMax - xMin, yMax - yMin, opt1);
-      return [p1, p2, p3, rect];
+      const tri = g.polygon(
+        [
+          [x1, y1],
+          [x2, y2],
+          [qx!, qy!],
+        ],
+        opt1
+      );
+      return [p1, p2, p3, tri];
     }
     return [];
   }

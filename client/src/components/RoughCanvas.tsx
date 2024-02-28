@@ -122,7 +122,6 @@ const RoughCanvas: FC<RoughCanvasProps> = ({}) => {
     }
   };
   const handleMouseMove = (event: React.MouseEvent<HTMLCanvasElement>) => {
-    console.log(canvasState.current);
     if (canvasState.current === 'idle') {
       const { clientX, clientY } = event;
       (event.target as HTMLElement).style.cursor = cursorFromAnchor(
@@ -150,19 +149,24 @@ const RoughCanvas: FC<RoughCanvasProps> = ({}) => {
   };
   const handleMouseUp = (event: React.MouseEvent<HTMLCanvasElement>) => {
     // normalize the element
-    if (canvasState.current === 'drawing' || canvasState.current === 'resize') {
+    if (canvasState.current === 'drawing') {
       const ele = selectPayload.current.ele!;
       if (ele.isDrawable() && ele.isVisible()) {
         ele.onNormalize();
-        setElements([...elements]); // ? may not be necessary
-      }
+        // setElements([...elements]); // not be necessary
+        // after drawing, set the tool to select
+        if (canvasState.current === 'drawing') setTool('select');
+      } // reset the selected payload
+      else selectPayload.current = { anchor: null, ele: null };
+    } else if (canvasState.current === 'resize') {
+      const ele = selectPayload.current.ele!;
+      ele.onNormalize();
+      // setElements([...elements]); // not be necessary
     }
     // Filter out the elements that are not drawable or not visible
     setElements([
       ...elements.filter((ele) => ele.isDrawable() && ele.isVisible()),
     ]);
-    // after drawing, set the tool to select
-    if (canvasState.current === 'drawing') setTool('select');
 
     // Reset the canvas state
     canvasState.current = 'idle';

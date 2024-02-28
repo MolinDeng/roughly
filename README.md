@@ -16,10 +16,10 @@ I'm cloning the [Excalidraw](https://excalidraw.com/) project to learn more abou
 - [x] Papyrus-Paper-like Background
 - [x] OOP-refactor
 - [x] Fix Randomness of a single shape
-- [ ] Draw Gizmo when a shape is selected
+- [x] Draw Gizmo when a shape is selected
 - Shape Creation
   - [x] Line
-  - [ ] Curve Line (using SVG)
+  - [x] Curve Line (using SVG)
   - [x] Rectangle
   - [x] Ellipse
   - [x] Straight Arrow (using SVG)
@@ -31,7 +31,7 @@ I'm cloning the [Excalidraw](https://excalidraw.com/) project to learn more abou
 - Shape Manipulation
   - [x] Move
   - [x] Resize
-  - [ ] Select
+  - [x] Select
   - [ ] Rotate (using Matrix ?)
   - [ ] Delete
 - [ ] Real-time collaboration
