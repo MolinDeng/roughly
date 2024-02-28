@@ -9,7 +9,7 @@ const defaultRoughOptions: RoughOptions = {
   strokeWidth: 1,
   hachureAngle: 60, // angle of hachure,
   hachureGap: 8,
-  simplification: 0.5, // useful for AI-generated SVG
+  // simplification: 0.5, // useful for AI-generated SVG
 };
 
 export class RoughFactor {

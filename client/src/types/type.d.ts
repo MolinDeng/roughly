@@ -26,9 +26,7 @@ type RoughOptions = {
   fillStyle: RoughFillStyle;
 } & Options;
 
-type SelectedPayload = {
-  hitX: number;
-  hitY: number;
+type ClickPayload = {
   anchor: Anchor;
   ele: RoughElement | null;
 };

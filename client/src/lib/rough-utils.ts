@@ -1,34 +1,17 @@
 import { RoughElement } from '@/models/RoughElement';
-import { RoughFillStyle, SelectedPayload } from '@/types/type';
+import { ClickPayload, RoughFillStyle } from '@/types/type';
 
-// * Not that efficient, but it works
-const getSelectedPayload = (
+const getClickPayload = (
   elements: RoughElement[],
   hitX: number,
   hitY: number
-): SelectedPayload => {
+): ClickPayload => {
   for (let i = elements.length - 1; i >= 0; i--) {
     const anchor = elements[i].anchorWithinMe(hitX, hitY);
-    if (anchor !== null)
-      return {
-        hitX,
-        hitY,
-        anchor,
-        ele: elements[i],
-      };
+    if (anchor !== null) return { anchor, ele: elements[i] };
   }
-  return getNullPayload();
+  return { anchor: null, ele: null };
 };
-
-const getNullPayload = (): SelectedPayload => {
-  return {
-    hitX: 0,
-    hitY: 0,
-    anchor: null,
-    ele: null,
-  };
-};
-
 // generate a random style
 const randomStyle = () => {
   const styles = [
@@ -43,4 +26,4 @@ const randomStyle = () => {
   return styles[Math.floor(Math.random() * styles.length)] as RoughFillStyle;
 };
 
-export { getSelectedPayload, getNullPayload, randomStyle };
+export { randomStyle, getClickPayload };

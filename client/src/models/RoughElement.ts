@@ -3,7 +3,7 @@ import { Drawable } from 'roughjs/bin/core';
 import short from 'short-uuid';
 import rough from 'roughjs';
 import { randomStyle } from '@/lib/rough-utils';
-import { distance, isInTriangle, nearPoint } from '@/lib/math';
+import { distance, isInTriangle, nearPoint, slope } from '@/lib/math';
 
 export class RoughElement {
   type: RoughTool;
@@ -17,7 +17,7 @@ export class RoughElement {
   options: RoughOptions;
   // * For moving functionality
   private snapshot?: EleSnapshot;
-  // * For arrow only
+  // * For arrow and line only
   qx?: number;
   qy?: number;
 
@@ -64,7 +64,20 @@ export class RoughElement {
 
   getGizmo(): Drawable[] {
     const g = rough.generator();
-    let { x1, y1, x2, y2, type } = this;
+    const opt1 = {
+      stroke: 'black',
+      strokeWidth: 0.5,
+      roughness: 0,
+      strokeLineDash: [5, 5],
+    };
+    const opt2 = {
+      stroke: 'black',
+      fillStyle: 'solid',
+      fill: 'purple',
+      strokeWidth: 0.5,
+      roughness: 0,
+    };
+    let { x1, y1, x2, y2, type, qx, qy } = this;
     if (type === 'rect' || type === 'ellipse' || type === 'diamond') {
       // expand the rectangle a little bit
       [x1, x2, y1, y2] = [
@@ -75,51 +88,30 @@ export class RoughElement {
       ];
       const [x1p, y1p, x2p, y2p] = [x1 - 5, y1 - 5, x2 + 5, y2 + 5];
       // draw a rectangle using polygon
-      const opt1 = {
-        stroke: 'black',
-        strokeWidth: 0.5,
-        roughness: 0,
-        strokeLineDash: [5, 5],
-      };
-      const gizmo = g.rectangle(x1p, y1p, x2p - x1p, y2p - y1p, opt1);
+      const rect = g.rectangle(x1p, y1p, x2p - x1p, y2p - y1p, opt1);
       // draw control points
-      const opt2 = {
-        stroke: 'black',
-        fillStyle: 'solid',
-        fill: 'purple',
-        strokeWidth: 0.5,
-        roughness: 0,
-      };
       const p1 = g.circle(x1p, y1p, 5, opt2);
       const p2 = g.circle(x2p, y1p, 5, opt2);
       const p3 = g.circle(x2p, y2p, 5, opt2);
       const p4 = g.circle(x1p, y2p, 5, opt2);
-      return [gizmo, p1, p2, p3, p4];
-    } else if (type === 'arrow') {
+      return [rect, p1, p2, p3, p4];
+    } else if (type === 'line' || type === 'arrow') {
       // draw three control points
-      const opt = {
-        stroke: 'black',
-        fillStyle: 'solid',
-        fill: 'purple',
-        strokeWidth: 0.5,
-        roughness: 0,
-      };
-      const p1 = g.circle(x1, y1, 8, opt);
-      const p2 = g.circle(x2, y2, 8, opt);
-      const p3 = g.circle(this.qx!, this.qy!, 8, opt);
-      return [p1, p2, p3];
-    } else if (type === 'line') {
-      // draw two control points
-      const opt = {
-        stroke: 'black',
-        fillStyle: 'solid',
-        fill: 'purple',
-        strokeWidth: 0.5,
-        roughness: 0,
-      };
-      const p1 = g.circle(x1, y1, 8, opt);
-      const p2 = g.circle(x2, y2, 8, opt);
-      return [p1, p2];
+      const p1 = g.circle(x1, y1, 8, opt2);
+      const p2 = g.circle(x2, y2, 8, opt2);
+      const p3 = g.circle(this.qx!, this.qy!, 8, opt2);
+      if (Math.abs(slope(x1, y1, x2, y2) - slope(x1, y1, qx!, qy!)) < 0.15)
+        return [p1, p2, p3];
+      const [xMin, xMax] = [
+        Math.min(x1, Math.min(x2, qx!)) - 5,
+        Math.max(x1, Math.max(x2, qx!)) + 5,
+      ];
+      const [yMin, yMax] = [
+        Math.min(y1, Math.min(y2, qy!)) - 5,
+        Math.max(y1, Math.max(y2, qy!)) + 5,
+      ];
+      const rect = g.rectangle(xMin, yMin, xMax - xMin, yMax - yMin, opt1);
+      return [p1, p2, p3, rect];
     }
     return [];
   }
@@ -128,7 +120,13 @@ export class RoughElement {
     const { x1, y1, x2, y2 } = this;
     const g = rough.generator();
     if (this.type === 'line') {
-      this.drawable = g.line(x1, y1, x2, y2, this.options);
+      const Q = { x: this.qx!, y: this.qy! };
+      const svgPath = `
+          M ${x1} ${y1}
+          Q ${Q.x} ${Q.y} ${x2} ${y2}
+          M ${x2} ${y2}
+        `;
+      this.drawable = g.path(svgPath, this.options);
     } else if (this.type === 'arrow') {
       const arrowLength = Math.min(
         20,
@@ -158,7 +156,6 @@ export class RoughElement {
     } else if (this.type === 'diamond') {
       const midX = (x1 + x2) / 2;
       const midY = (y1 + y2) / 2;
-      console.log('fillStyle', this.options.fillStyle);
       this.drawable = g.polygon(
         [
           [midX, y1],
@@ -183,7 +180,7 @@ export class RoughElement {
     // x1 and y1 are the starting point, remain unchanged
     this.x2 = x2;
     this.y2 = y2;
-    if (this.type === 'arrow') {
+    if (this.type === 'arrow' || this.type === 'line') {
       this.qx = (this.x1 + x2) / 2;
       this.qy = (this.y1 + y2) / 2;
     }
@@ -196,7 +193,7 @@ export class RoughElement {
     this.y1 = y1 + dy;
     this.x2 = x2 + dx;
     this.y2 = y2 + dy;
-    if (this.type === 'arrow') {
+    if (this.type === 'arrow' || this.type === 'line') {
       this.qx! = qx! + dx;
       this.qy! = qy! + dy;
     }
@@ -262,37 +259,40 @@ export class RoughElement {
 
   anchorWithinMe(x: number, y: number): Anchor {
     const { type, x1, y1, x2, y2, qx, qy } = this;
-    if (type === 'line') {
-      const a = { x: x1, y: y1 };
-      const b = { x: x2, y: y2 };
-      const c = { x, y };
-      const offset = distance(a, b) - (distance(a, c) + distance(b, c));
-      const start = nearPoint(x, y, x1, y1, 'tl');
-      const end = nearPoint(x, y, x2, y2, 'br');
-      const inside = Math.abs(offset) <= 1 ? 'inside' : null;
-      return start || end || inside;
-    } else if (type === 'arrow') {
-      const a = { x: x1, y: y1 };
-      const b = { x: x2, y: y2 };
-      const c = { x, y };
-      const offset = distance(a, b) - (distance(a, c) + distance(b, c));
-      const start = nearPoint(x, y, x1, y1, 'tl');
-      const end = nearPoint(x, y, x2, y2, 'br');
-      const quadratic = nearPoint(x, y, qx!, qy!, 'q');
-      const inside = Math.abs(offset) <= 1 ? 'inside' : null;
+    if (type === 'line' || type === 'arrow') {
+      let inside: Anchor = null;
+      if (Math.abs(slope(x1, y1, x2, y2) - slope(x1, y1, qx!, qy!)) < 0.15) {
+        const a = { x: x1, y: y1 };
+        const b = { x: x2, y: y2 };
+        const c = { x, y };
+        const offset = distance(a, b) - (distance(a, c) + distance(b, c));
+        inside = Math.abs(offset) <= 3 ? 'inside' : null;
+      } else {
+        inside = isInTriangle(
+          { x, y },
+          { x: x1, y: y1 },
+          { x: x2, y: y2 },
+          { x: qx!, y: qy! }
+        )
+          ? 'inside'
+          : null;
+      }
+      const start = nearPoint(x, y, x1, y1) ? 'tl' : null;
+      const end = nearPoint(x, y, x2, y2) ? 'br' : null;
+      const quadratic = nearPoint(x, y, qx!, qy!) ? 'q' : null;
       return quadratic || start || end || inside;
     } else if (type === 'rect') {
-      const topLeft = nearPoint(x, y, x1, y1, 'tl');
-      const topRight = nearPoint(x, y, x2, y1, 'tr');
-      const bottomLeft = nearPoint(x, y, x1, y2, 'bl');
-      const bottomRight = nearPoint(x, y, x2, y2, 'br');
+      const topLeft = nearPoint(x, y, x1, y1) ? 'tl' : null;
+      const topRight = nearPoint(x, y, x2, y1) ? 'tr' : null;
+      const bottomLeft = nearPoint(x, y, x1, y2) ? 'bl' : null;
+      const bottomRight = nearPoint(x, y, x2, y2) ? 'br' : null;
       const inside = x >= x1 && x <= x2 && y >= y1 && y <= y2 ? 'inside' : null;
       return topLeft || topRight || bottomLeft || bottomRight || inside;
     } else if (type === 'ellipse') {
-      const topLeft = nearPoint(x, y, x1, y1, 'tl');
-      const topRight = nearPoint(x, y, x2, y1, 'tr');
-      const bottomLeft = nearPoint(x, y, x1, y2, 'bl');
-      const bottomRight = nearPoint(x, y, x2, y2, 'br');
+      const topLeft = nearPoint(x, y, x1, y1) ? 'tl' : null;
+      const topRight = nearPoint(x, y, x2, y1) ? 'tr' : null;
+      const bottomLeft = nearPoint(x, y, x1, y2) ? 'bl' : null;
+      const bottomRight = nearPoint(x, y, x2, y2) ? 'br' : null;
       // TODO: Maybe just use the rectangle formula for the ellipse
       const center = { x: (x1 + x2) / 2, y: (y1 + y2) / 2 };
       const rx = Math.abs(x2 - x1) / 2;
@@ -303,10 +303,10 @@ export class RoughElement {
           : null;
       return topLeft || topRight || bottomLeft || bottomRight || inside;
     } else if (type === 'diamond') {
-      const topLeft = nearPoint(x, y, x1, y1, 'tl');
-      const topRight = nearPoint(x, y, x2, y1, 'tr');
-      const bottomLeft = nearPoint(x, y, x1, y2, 'bl');
-      const bottomRight = nearPoint(x, y, x2, y2, 'br');
+      const topLeft = nearPoint(x, y, x1, y1) ? 'tl' : null;
+      const topRight = nearPoint(x, y, x2, y1) ? 'tr' : null;
+      const bottomLeft = nearPoint(x, y, x1, y2) ? 'bl' : null;
+      const bottomRight = nearPoint(x, y, x2, y2) ? 'br' : null;
       const midX = (x1 + x2) / 2;
       const midY = (y1 + y2) / 2;
       const inside =

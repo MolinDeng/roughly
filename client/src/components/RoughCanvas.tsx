@@ -2,11 +2,11 @@
 
 import usePapyrusBg from '@/hooks/UsePapyrusBg';
 import { useWindowSize } from '@/hooks/UseWindowSize';
-import { getNullPayload, getSelectedPayload } from '@/lib/rough-utils';
+import { getClickPayload } from '@/lib/rough-utils';
 import { RoughElement } from '@/models/RoughElement';
 import { RoughFactor } from '@/models/RoughFactor';
 import { useRoughStore } from '@/stores/rough-store';
-import { Anchor, CanvasState, SelectedPayload } from '@/types/type';
+import { Anchor, CanvasState, ClickPayload, Point } from '@/types/type';
 import { Loader } from 'lucide-react';
 import { FC, useEffect, useRef, useState } from 'react';
 import rough from 'roughjs';
@@ -24,11 +24,12 @@ interface RoughCanvasProps {}
 const RoughCanvas: FC<RoughCanvasProps> = ({}) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const canvasState = useRef<CanvasState>('idle');
-  const selectState = useRef<SelectedPayload>(getNullPayload()); // selected element
-  const [elements, setElements] = useState<RoughElement[]>([]);
-  const [gizmo, setGizmo] = useState<Drawable[]>([]);
+  const clickPos = useRef<Point>({ x: 0, y: 0 });
+  const selectPayload = useRef<ClickPayload>({ anchor: null, ele: null });
 
-  const { currTool } = useRoughStore();
+  const [elements, setElements] = useState<RoughElement[]>([]);
+
+  const { currTool, setTool } = useRoughStore();
   const size = useWindowSize();
   const { img: bg, loaded: bgLoaded } = usePapyrusBg();
   // Key listener
@@ -73,20 +74,17 @@ const RoughCanvas: FC<RoughCanvasProps> = ({}) => {
     if (!canvasRef.current) return;
     const ctx = canvasRef.current.getContext('2d');
     if (!ctx) return;
-    // * Resize the canvas
+    // resize the canvas
     canvasRef.current.width = size.width - 10; // ! -10 for debug only
     canvasRef.current.height = size.height - 10; // ! -10 for debug only
-    // * Create grainy background
+    // create grainy background
     if (bgLoaded && bg) {
       const pat = ctx.createPattern(bg, 'repeat');
       ctx.fillStyle = pat as CanvasPattern;
-    } else {
-      // white
-      ctx.fillStyle = '#fff';
-    }
+    } else ctx.fillStyle = '#fff'; // white
     const { width, height } = ctx.canvas.getBoundingClientRect();
     ctx.fillRect(0, 0, width, height);
-    // * Create rough canvas
+    // create rough canvas
     const rc = rough.canvas(canvasRef.current);
     elements
       .filter((ele) => ele.isDrawable())
@@ -94,78 +92,80 @@ const RoughCanvas: FC<RoughCanvasProps> = ({}) => {
         rc.draw(drawable!);
       });
     // Draw the Gizmo for the selected element
-    gizmo.forEach((g) => rc.draw(g));
-  }, [canvasRef, elements, size, bg, gizmo]);
+    const { ele } = selectPayload.current;
+    if (currTool === 'select' && ele !== null)
+      ele.getGizmo().forEach((g) => rc.draw(g));
+  }, [canvasRef, elements, size, bg]);
 
   const handleMouseDown = (event: React.MouseEvent<HTMLCanvasElement>) => {
+    const { clientX, clientY } = event;
+    clickPos.current = { x: clientX, y: clientY };
     if (currTool === 'select') {
-      const { clientX, clientY } = event;
-      const payload = getSelectedPayload(elements, clientX, clientY);
-      if (payload.ele === null) return;
-      // * Set the selected element
-      selectState.current = payload;
-      // * Update the action state
-      if (payload.anchor === 'inside') {
-        payload.ele.onSelect(); // * Save the snapshot
-        canvasState.current = 'moving';
-      } else {
-        canvasState.current = 'resize';
+      const payload = getClickPayload(elements, clientX, clientY);
+      if (payload.ele !== null) {
+        const { ele, anchor } = payload;
+        const { ele: currEle } = selectPayload.current;
+        // update the action state
+        if (anchor === 'inside') {
+          ele.onSelect(); // save the snapshot
+          canvasState.current = 'moving';
+        } // if (ele === currEle)
+        else canvasState.current = 'resize';
       }
+      // set the selected payload
+      selectPayload.current = payload;
     } else {
       canvasState.current = 'drawing';
-      const { clientX: x, clientY: y } = event;
-      const newEle = RoughFactor.create(currTool, x, y);
-      selectState.current.ele = newEle;
+      const newEle = RoughFactor.create(currTool, clientX, clientY);
+      selectPayload.current.ele = newEle;
       setElements([...elements, newEle]);
     }
   };
   const handleMouseMove = (event: React.MouseEvent<HTMLCanvasElement>) => {
-    if (currTool === 'select') {
+    console.log(canvasState.current);
+    if (canvasState.current === 'idle') {
       const { clientX, clientY } = event;
-      const { anchor, ele } = getSelectedPayload(elements, clientX, clientY);
-      (event.target as HTMLElement).style.cursor = cursorFromAnchor(anchor);
-      if (ele !== null) {
-        setGizmo(ele.getGizmo());
-      } else if (gizmo.length > 0) {
-        setGizmo([]);
-      }
-    }
-
-    if (canvasState.current === 'drawing') {
+      (event.target as HTMLElement).style.cursor = cursorFromAnchor(
+        getClickPayload(elements, clientX, clientY).anchor
+      );
+    } else if (canvasState.current === 'drawing') {
       const { clientX, clientY } = event;
-      const ele = selectState.current.ele!;
+      const ele = selectPayload.current.ele!;
       ele.onDraw(clientX, clientY);
       setElements([...elements]);
     } else if (canvasState.current === 'moving') {
       const { clientX, clientY } = event;
-      const { hitX, hitY, ele } = selectState.current;
-      // this element is the object that is created before the mouse down event
-      ele!.onMove(clientX - hitX, clientY - hitY);
+      const { x: hitX, y: hitY } = clickPos.current;
+      const ele = selectPayload.current.ele!;
+      ele.onMove(clientX - hitX, clientY - hitY);
       setElements([...elements]);
+      (event.target as HTMLElement).style.cursor = cursorFromAnchor('inside');
     } else if (canvasState.current === 'resize') {
       const { clientX, clientY } = event;
-      const { ele, anchor } = selectState.current;
+      const { ele, anchor } = selectPayload.current;
       ele!.onResize(clientX, clientY, anchor);
       setElements([...elements]);
+      (event.target as HTMLElement).style.cursor = cursorFromAnchor(anchor);
     }
   };
   const handleMouseUp = (event: React.MouseEvent<HTMLCanvasElement>) => {
-    // * Adjust position of the element
+    // normalize the element
     if (canvasState.current === 'drawing' || canvasState.current === 'resize') {
-      const ele = selectState.current.ele!;
+      const ele = selectPayload.current.ele!;
       if (ele.isDrawable() && ele.isVisible()) {
         ele.onNormalize();
-        setElements([...elements]);
+        setElements([...elements]); // ? may not be necessary
       }
     }
-
-    // * Filter out the elements that are not drawable or not visible
+    // Filter out the elements that are not drawable or not visible
     setElements([
       ...elements.filter((ele) => ele.isDrawable() && ele.isVisible()),
     ]);
-    // * Reset the canvas state
+    // after drawing, set the tool to select
+    if (canvasState.current === 'drawing') setTool('select');
+
+    // Reset the canvas state
     canvasState.current = 'idle';
-    selectState.current = getNullPayload();
   };
 
   return bgLoaded ? (

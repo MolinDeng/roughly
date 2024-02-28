@@ -17,14 +17,12 @@ const isInTriangle = (p: Point, a: Point, b: Point, c: Point) => {
   return !(hasNeg && hasPos);
 };
 
-const nearPoint = (
-  x: number,
-  y: number,
-  x1: number,
-  y1: number,
-  name: Anchor
-): Anchor => {
-  return Math.abs(x - x1) <= 5 && Math.abs(y - y1) <= 5 ? name : null;
+const nearPoint = (x: number, y: number, x1: number, y1: number): boolean => {
+  return Math.abs(x - x1) <= 8 && Math.abs(y - y1) <= 8;
 };
 
-export { distance, isInTriangle, nearPoint };
+const slope = (x1: number, y1: number, x2: number, y2: number) => {
+  return (y2 - y1) / (x2 - x1);
+};
+
+export { distance, isInTriangle, nearPoint, slope };

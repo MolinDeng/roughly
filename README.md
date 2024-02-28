@@ -1,4 +1,6 @@
-# An Collaborative, Open-source, Hand-drawn style, AI-integrated whiteboard
+# Roughly
+
+## An Collaborative, Open-source, Hand-drawn style, AI-integrated whiteboard
 
 I'm cloning the [Excalidraw](https://excalidraw.com/) project to learn more about the tech stacks and how to build a real-time collaboration app.
 
@@ -15,8 +17,9 @@ I'm cloning the [Excalidraw](https://excalidraw.com/) project to learn more abou
 - [x] OOP-refactor
 - [x] Fix Randomness of a single shape
 - [ ] Draw Gizmo when a shape is selected
-- [ ] Shape Creation
+- Shape Creation
   - [x] Line
+  - [ ] Curve Line (using SVG)
   - [x] Rectangle
   - [x] Ellipse
   - [x] Straight Arrow (using SVG)
@@ -25,7 +28,7 @@ I'm cloning the [Excalidraw](https://excalidraw.com/) project to learn more abou
   - [ ] Circle (pressing Shift while drawing Ellipse)
   - [ ] More shapes using SVG or Polygon
   - [ ] Freehand Drawing
-- [ ] Shape Manipulation
+- Shape Manipulation
   - [x] Move
   - [x] Resize
   - [ ] Select
@@ -45,14 +48,14 @@ I'm cloning the [Excalidraw](https://excalidraw.com/) project to learn more abou
 [![TypeScript](https://img.shields.io/badge/TypeScript-3178C6?style=for-the-badge&logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
 [![NextJS](https://img.shields.io/badge/NextJS-000000?style=for-the-badge&logo=next.js&logoColor=white)](https://nextjs.org/)
 [![TailwindCSS](https://img.shields.io/badge/TailwindCSS-38B2AC?style=for-the-badge&logo=tailwind-css&logoColor=white)](https://tailwindcss.com/)
-[![RoughJS](https://img.shields.io/badge/RoughJS-FFD166?style=for-the-badge&logo=javascript&logoColor=white)](https://roughjs.com/)
+[![RoughJS](https://img.shields.io/badge/RoughJS-FFD166?style=for-the-badge&logo=southwestairlines&logoColor=white)](https://roughjs.com/)
 [![Socket.io](https://img.shields.io/badge/Socket.io-010101?style=for-the-badge&logo=socket.io&logoColor=white)](https://socket.io/)
 [![Node.js](https://img.shields.io/badge/Node.js-339933?style=for-the-badge&logo=node.js&logoColor=white)](https://nodejs.org/)
 [![Express](https://img.shields.io/badge/Express-000000?style=for-the-badge&logo=express&logoColor=white)](https://expressjs.com/)
 [![MongoDB](https://img.shields.io/badge/MongoDB-47A248?style=for-the-badge&logo=mongodb&logoColor=white)](https://www.mongodb.com/)
 [![OpenAI](https://img.shields.io/badge/OpenAI-FF6C37?style=for-the-badge&logo=openai&logoColor=white)](https://openai.com/)
 [![Vercel](https://img.shields.io/badge/Vercel-000000?style=for-the-badge&logo=vercel&logoColor=white)](https://vercel.com/)
-[![ShadcnUI](https://img.shields.io/badge/ShadcnUI-006CFF?style=for-the-badge&logo=shadcn&logoColor=white)](http://shadcn.com)
+[![ShadcnUI](https://img.shields.io/badge/ShadcnUI-006CFF?style=for-the-badge&logo=shadcnui&logoColor=white)](http://shadcn.com)
 
 ## Getting Started
 
@@ -68,4 +71,4 @@ You can now play around with it on `http://localhost:3000`.
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-[[Back to Top]](#an-collaborative-open-source-hand-drawn-style-ai-integrated-whiteboard)
+[[Back to Top]](#roughly)
