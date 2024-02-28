@@ -10,7 +10,6 @@ import { Anchor, CanvasState, ClickPayload, Point } from '@/types/type';
 import { Loader } from 'lucide-react';
 import { FC, useEffect, useRef, useState } from 'react';
 import rough from 'roughjs';
-import { Drawable } from 'roughjs/bin/core';
 
 const cursorFromAnchor = (anchor: Anchor): string => {
   if (anchor === 'inside') return 'move';

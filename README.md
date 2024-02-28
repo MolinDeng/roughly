@@ -2,7 +2,8 @@
 
 ## An Collaborative, Open-source, Hand-drawn style, AI-integrated whiteboard
 
-I'm cloning the [Excalidraw](https://excalidraw.com/) project to learn more about the tech stacks and how to build a real-time collaboration app.
+I'm cloning the [Excalidraw](https://excalidraw.com/) project to learn more about the tech stacks and how to build a real-time collaboration app.\
+I built it from scratch using TypeScript, NextJS, TailwindCSS, RoughJS, and Socket.io.
 
 ## Features
 

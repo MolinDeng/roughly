@@ -100,8 +100,10 @@ export class RoughElement {
       const p1 = g.circle(x1, y1, 8, opt2);
       const p2 = g.circle(x2, y2, 8, opt2);
       const p3 = g.circle(this.qx!, this.qy!, 8, opt2);
+      // straight line
       if (Math.abs(slope(x1, y1, x2, y2) - slope(x1, y1, qx!, qy!)) < 0.15)
         return [p1, p2, p3];
+      // quadratic line
       const tri = g.polygon(
         [
           [x1, y1],
