@@ -29,16 +29,25 @@ I built it from scratch using TypeScript, NextJS, TailwindCSS, RoughJS, and Sock
   - [ ] Circle (pressing Shift while drawing Ellipse)
   - [ ] More shapes using SVG or Polygon
   - [ ] Freehand Drawing
+  - [ ] Text
 - Shape Manipulation
   - [x] Move
   - [x] Resize
   - [x] Select
   - [ ] Rotate (using Matrix ?)
-  - [ ] Delete
+  - [x] Delete
+- [ ] Keyboard Shortcuts
 - [ ] Real-time collaboration
 - [ ] LLM (OpenAI API) integration to auto-generate shapes
 - [ ] Redo / Undo
-- [ ] Drawing Options
+- Drawing Options
+  - [ ] Stroke Color
+  - [ ] Background Fill
+  - [ ] Background Fillstyle
+  - [ ] Stroke Width
+  - [ ] Stroke Style
+  - [ ] Roughness
+  - [ ] Opacity
 - [ ] Text
 - [ ] Eraser
 - [ ] Performance Optimizations
