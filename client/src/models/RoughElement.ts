@@ -46,7 +46,7 @@ export class RoughElement {
   }
   // area smaller than 10 is not visible
   isVisible() {
-    return Math.abs(this.x2 - this.x1) > 3 && Math.abs(this.y2 - this.y1) > 3;
+    return Math.abs(this.x2 - this.x1) > 3 || Math.abs(this.y2 - this.y1) > 3;
   }
 
   getSnapshot(): EleSnapshot {

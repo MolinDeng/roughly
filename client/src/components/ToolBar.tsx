@@ -17,8 +17,9 @@ export function ToolBar() {
   return (
     <div className="fixed top-4 left-1/2 transform -translate-x-1/2 bg-white p-4 rounded-lg shadow-md">
       <ToggleGroup
-        className="h-3"
+        className="h-3 "
         type="single"
+        variant={'violet'}
         value={currTool}
         onValueChange={(value: RoughTool) => {
           if (value === '') return;

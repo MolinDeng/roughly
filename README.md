@@ -21,6 +21,7 @@ I built it from scratch using TypeScript, NextJS, TailwindCSS, RoughJS, and Sock
 - Shape Creation
   - [x] Line
   - [x] Curve Line (using SVG)
+  - [ ] Another Line/Arrow Implementation
   - [x] Rectangle
   - [x] Ellipse
   - [x] Straight Arrow (using SVG)
