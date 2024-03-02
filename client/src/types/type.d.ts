@@ -23,7 +23,7 @@ type RoughFillStyle =
   | 'zigzag-line'; // TODO Some of them are not efficient to use
 
 type RoughOptions = {
-  fillStyle: RoughFillStyle;
+  fillStyle?: RoughFillStyle;
 } & Options;
 
 type ClickPayload = {

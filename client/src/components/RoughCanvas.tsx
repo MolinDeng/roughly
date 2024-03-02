@@ -44,10 +44,40 @@ const RoughCanvas: FC<RoughCanvasProps> = ({}) => {
           console.log('Undo');
         }
       }
+      if (event.key === 'Backspace' || event.key === 'Delete') {
+        // delete key
+        console.log('Delete');
+        if (selectPayload.current.ele !== null) {
+          const { ele } = selectPayload.current;
+          setElements([...elements.filter((e) => e !== ele)]);
+          selectPayload.current = { anchor: null, ele: null };
+        }
+      }
       // shift key
       if (event.shiftKey) {
         // shift + any key
         console.log('shift key is pressed');
+      }
+      // number keys
+      switch (event.key) {
+        case '1':
+          setTool('select');
+          break;
+        case '2':
+          setTool('line');
+          break;
+        case '3':
+          setTool('arrow');
+          break;
+        case '4':
+          setTool('rect');
+          break;
+        case '5':
+          setTool('diamond');
+          break;
+        case '6':
+          setTool('ellipse');
+          break;
       }
     };
     window.addEventListener('keydown', handleKeyDown);

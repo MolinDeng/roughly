@@ -2,7 +2,6 @@ import { Anchor, EleSnapshot, RoughOptions, RoughTool } from '@/types/type';
 import { Drawable } from 'roughjs/bin/core';
 import short from 'short-uuid';
 import rough from 'roughjs';
-import { randomStyle } from '@/lib/rough-utils';
 import { distance, isInTriangle, nearPoint, slope } from '@/lib/math';
 
 export class RoughElement {
@@ -40,7 +39,6 @@ export class RoughElement {
     this.options = options;
     // fix seed for consistent hachure
     this.options.seed = Math.floor(Math.random() * 2 ** 31);
-    this.options.fillStyle = randomStyle(); // ! Debug only
   }
 
   isDrawable() {
