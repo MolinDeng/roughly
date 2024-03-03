@@ -22,11 +22,11 @@ export class RoughElement {
 
   constructor(
     type: RoughTool,
+    options: RoughOptions,
     x1: number,
     y1: number,
     x2: number,
-    y2: number,
-    options: RoughOptions
+    y2: number
   ) {
     this.type = type;
     this.uuid = short.generate();

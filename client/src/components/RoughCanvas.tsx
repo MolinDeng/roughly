@@ -1,5 +1,6 @@
 'use client';
 
+import { FC, useEffect, useRef, useState } from 'react';
 import usePapyrusBg from '@/hooks/UsePapyrusBg';
 import { useWindowSize } from '@/hooks/UseWindowSize';
 import { getClickPayload } from '@/lib/rough-utils';
@@ -8,7 +9,8 @@ import { RoughFactor } from '@/models/RoughFactor';
 import { useRoughStore } from '@/stores/rough-store';
 import { Anchor, CanvasState, ClickPayload, Point } from '@/types/type';
 import { Loader } from 'lucide-react';
-import { FC, useEffect, useRef, useState } from 'react';
+import { useOptionStore } from '@/stores/option-store';
+
 import rough from 'roughjs';
 
 const cursorFromAnchor = (anchor: Anchor): string => {
@@ -29,6 +31,7 @@ const RoughCanvas: FC<RoughCanvasProps> = ({}) => {
   const [elements, setElements] = useState<RoughElement[]>([]);
 
   const { currTool, setTool } = useRoughStore();
+  const { options } = useOptionStore();
   const size = useWindowSize();
   const { img: bg, loaded: bgLoaded } = usePapyrusBg();
   // Key listener
@@ -145,7 +148,7 @@ const RoughCanvas: FC<RoughCanvasProps> = ({}) => {
       selectPayload.current = payload;
     } else {
       canvasState.current = 'drawing';
-      const newEle = RoughFactor.create(currTool, clientX, clientY);
+      const newEle = RoughFactor.create(currTool, options, clientX, clientY);
       selectPayload.current.ele = newEle;
       setElements([...elements, newEle]);
     }
