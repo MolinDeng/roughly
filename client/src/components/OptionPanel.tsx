@@ -1,7 +1,10 @@
+'use client';
 import React from 'react';
 
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import { Ban } from 'lucide-react';
+import { useWindowSize } from '@/hooks/UseWindowSize';
+import { cn } from '@/lib/utils';
 
 type Opt = {
   value: string;
@@ -40,19 +43,19 @@ const options: OptionProps[] = [
     title: 'Stroke',
     opts: [
       {
-        value: 'select',
-        ariaLabel: 'Select object',
-        html: <div className="h-3 w-3 bg-black" />,
+        value: 'black',
+        ariaLabel: 'Select black stroke',
+        html: <div className="h-3.5 w-3.5 bg-black rounded-[4px]" />,
       },
       {
-        value: 'line',
-        ariaLabel: 'Toggle line',
-        html: <div className="h-3 w-3 bg-red-600" />,
+        value: 'red',
+        ariaLabel: 'Select red stroke',
+        html: <div className="h-3.5 w-3.5 bg-red-600 rounded-[4px]" />,
       },
       {
-        value: 'arrow',
-        ariaLabel: 'Toggle arrow',
-        html: <div className="h-3 w-3 bg-blue-600" />,
+        value: 'blue',
+        ariaLabel: 'Select blue stroke',
+        html: <div className="h-3.5 w-3.5 bg-blue-600 rounded-[4px]" />,
       },
     ],
   },
@@ -60,19 +63,246 @@ const options: OptionProps[] = [
     title: 'Background',
     opts: [
       {
-        value: 'select',
+        value: 'none',
         ariaLabel: 'Select object',
-        html: <Ban className="h-3 w-3" />,
+        html: <Ban className="h-3.5 w-3.5" />,
       },
       {
         value: 'line',
         ariaLabel: 'Toggle line',
-        html: <div className="h-3 w-3 bg-red-600" />,
+        html: <div className="h-3.5 w-3.5 bg-red-600 rounded-[4px]" />,
       },
       {
         value: 'arrow',
         ariaLabel: 'Toggle arrow',
-        html: <div className="h-3 w-3 bg-blue-600" />,
+        html: <div className="h-3.5 w-3.5 bg-blue-600 rounded-[4px]" />,
+      },
+    ],
+  },
+  {
+    title: 'Fill',
+    opts: [
+      {
+        value: 'black',
+        ariaLabel: 'Select black stroke',
+        html: (
+          <svg
+            className="h-4 w-4"
+            aria-hidden="true"
+            focusable="false"
+            role="img"
+            viewBox="0 0 20 20"
+            fill="none"
+            stroke="black"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth="1.25"
+          >
+            <path
+              d="M5.879 2.625h8.242a3.254 3.254 0 0 1 3.254 3.254v8.242a3.254 3.254 0 0 1-3.254 3.254H5.88a3.254 3.254 0 0 1-3.254-3.254V5.88a3.254 3.254 0 0 1 3.254-3.254Z"
+              stroke="currentColor"
+            />
+            <mask
+              id="FillHachureIcon"
+              maskUnits="userSpaceOnUse"
+              x="2"
+              y="2"
+              width="16"
+              height="16"
+              style={{ maskType: 'alpha' }}
+            >
+              <path
+                d="M5.879 2.625h8.242a3.254 3.254 0 0 1 3.254 3.254v8.242a3.254 3.254 0 0 1-3.254 3.254H5.88a3.254 3.254 0 0 1-3.254-3.254V5.88a3.254 3.254 0 0 1 3.254-3.254Z"
+                fill="black"
+                stroke="black"
+                strokeWidth="1.25"
+              ></path>
+            </mask>
+            <g mask="url(#FillHachureIcon)">
+              <path
+                d="M2.258 15.156 15.156 2.258M7.324 20.222 20.222 7.325m-20.444 5.35L12.675-.222m-8.157 18.34L17.416 5.22"
+                stroke="black"
+                strokeWidth="1.25"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              ></path>
+            </g>
+          </svg>
+        ),
+      },
+      {
+        value: 'red',
+        ariaLabel: 'Select red stroke',
+        html: (
+          <svg
+            className="h-4 w-4"
+            aria-hidden="true"
+            focusable="false"
+            role="img"
+            viewBox="0 0 20 20"
+            fill="none"
+            stroke="black"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          >
+            <g clipPath="url(#a)">
+              <path
+                d="M5.879 2.625h8.242a3.254 3.254 0 0 1 3.254 3.254v8.242a3.254 3.254 0 0 1-3.254 3.254H5.88a3.254 3.254 0 0 1-3.254-3.254V5.88a3.254 3.254 0 0 1 3.254-3.254Z"
+                stroke="black"
+                strokeWidth="1.25"
+              ></path>
+              <mask
+                id="FillCrossHatchIcon"
+                maskUnits="userSpaceOnUse"
+                x="-1"
+                y="-1"
+                width="22"
+                height="22"
+                style={{ maskType: 'alpha' }}
+              >
+                <path
+                  d="M2.426 15.044 15.044 2.426M7.383 20 20 7.383M0 12.617 12.617 0m-7.98 17.941L17.256 5.324m-2.211 12.25L2.426 4.956M20 12.617 7.383 0m5.234 20L0 7.383m17.941 7.98L5.324 2.745"
+                  stroke="black"
+                  strokeWidth="1.25"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                ></path>
+              </mask>
+              <g mask="url(#FillCrossHatchIcon)">
+                <path
+                  d="M14.121 2H5.88A3.879 3.879 0 0 0 2 5.879v8.242A3.879 3.879 0 0 0 5.879 18h8.242A3.879 3.879 0 0 0 18 14.121V5.88A3.879 3.879 0 0 0 14.121 2Z"
+                  fill="black"
+                ></path>
+              </g>
+            </g>
+            <defs>
+              <clipPath id="a">
+                <path fill="#fff" d="M0 0h20v20H0z"></path>
+              </clipPath>
+            </defs>
+          </svg>
+        ),
+      },
+      {
+        value: 'blue',
+        ariaLabel: 'Select blue stroke',
+        html: <div className="h-3.5 w-3.5 bg-black rounded-[4px]" />,
+      },
+    ],
+  },
+  {
+    title: 'Stoke Width',
+    opts: [
+      {
+        value: 'select',
+        ariaLabel: 'Select object',
+        html: (
+          <svg className="h-4 w-4 " viewBox="0 0 20 20" fill="none">
+            <path
+              d="M4.167 10h11.666"
+              stroke="black"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={1.25}
+            />
+          </svg>
+        ),
+      },
+      {
+        value: 'line',
+        ariaLabel: 'Toggle line',
+        html: (
+          <svg className="h-4 w-4 " viewBox="0 0 20 20" fill="none">
+            <path
+              d="M5 10h10"
+              stroke="black"
+              focusable="false"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2.5}
+            />
+          </svg>
+        ),
+      },
+      {
+        value: 'arrow',
+        ariaLabel: 'Toggle arrow',
+        html: (
+          <svg className="h-4 w-4 " viewBox="0 0 20 20" fill="none">
+            <path
+              d="M5 10h10"
+              stroke="black"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              focusable="false"
+              strokeWidth={3.75}
+            />
+          </svg>
+        ),
+      },
+    ],
+  },
+  {
+    title: 'Stoke Style',
+    opts: [
+      {
+        value: 'select',
+        ariaLabel: 'Select object',
+        html: (
+          <svg className="h-4 w-4 " viewBox="0 0 20 20" fill="none">
+            <path
+              d="M4.167 10h11.666"
+              stroke="black"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={1.25}
+            />
+          </svg>
+        ),
+      },
+      {
+        value: 'line',
+        ariaLabel: 'Toggle line',
+        html: (
+          <svg
+            className="h-4 w-4 "
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="black"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          >
+            <g strokeWidth="2">
+              <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
+              <path d="M5 12h2"></path>
+              <path d="M17 12h2"></path>
+              <path d="M11 12h2"></path>
+            </g>
+          </svg>
+        ),
+      },
+      {
+        value: 'arrow',
+        ariaLabel: 'Toggle arrow',
+        html: (
+          <svg
+            className="h-4 w-4 "
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="black"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          >
+            <g strokeWidth="2">
+              <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
+              <path d="M4 12v.01"></path>
+              <path d="M8 12v.01"></path>
+              <path d="M12 12v.01"></path>
+              <path d="M16 12v.01"></path>
+              <path d="M20 12v.01"></path>
+            </g>
+          </svg>
+        ),
       },
     ],
   },
@@ -128,8 +358,15 @@ const options: OptionProps[] = [
 ];
 
 export default function OptionPanel() {
+  const { height } = useWindowSize();
   return (
-    <aside className="fixed top-[10%] bottom-1/2 left-4 w-40 bg-white shadow-lg rounded-lg overflow-auto">
+    <aside
+      className={cn(
+        // max-h-[325px]
+        'fixed top-[10%] left-4 w-40 bg-white shadow-lg rounded-lg overflow-auto select-none',
+        height < 600 && 'h-[54%]'
+      )}
+    >
       {/* Sidebar content goes here */}
       <div className="flex flex-col items-start p-4 space-y-2">
         {options.map((option) => (

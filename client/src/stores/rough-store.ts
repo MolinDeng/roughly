@@ -1,7 +1,7 @@
 import { RoughTool } from '@/types/type';
 import { create } from 'zustand';
 
-export interface RoughStore {
+interface RoughStore {
   currTool: RoughTool;
   setTool: (t: RoughTool) => void;
 }

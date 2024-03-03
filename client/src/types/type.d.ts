@@ -3,12 +3,15 @@ import { Drawable, Options } from 'roughjs/bin/core';
 
 type RoughTool =
   | ''
+  | 'pan'
   | 'select'
   | 'line'
   | 'rect'
   | 'ellipse'
   | 'diamond'
-  | 'arrow';
+  | 'arrow'
+  | 'pencil'
+  | 'text';
 
 type CanvasState = 'idle' | 'drawing' | 'moving' | 'resize';
 

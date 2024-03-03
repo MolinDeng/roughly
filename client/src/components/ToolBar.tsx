@@ -10,14 +10,82 @@ import {
   Square,
   Diamond,
   MoveUpRight,
+  Hand,
+  LucideIcon,
+  Pencil,
+  Type,
 } from 'lucide-react';
+
+type Tool = {
+  value: RoughTool;
+  ariaLabel: string;
+  Icon: LucideIcon;
+  shortcut?: string;
+};
+
+const tools: Tool[] = [
+  {
+    value: 'pan',
+    ariaLabel: 'Pan',
+    Icon: Hand,
+  },
+  {
+    value: 'select',
+    ariaLabel: 'Select object',
+    Icon: MousePointer,
+    shortcut: '1',
+  },
+  {
+    value: 'line',
+    ariaLabel: 'Toggle line',
+    Icon: Minus,
+    shortcut: '2',
+  },
+  {
+    value: 'arrow',
+    ariaLabel: 'Toggle arrow',
+    Icon: MoveUpRight,
+    shortcut: '3',
+  },
+  {
+    value: 'rect',
+    ariaLabel: 'Toggle rect',
+    Icon: Square,
+    shortcut: '4',
+  },
+  {
+    value: 'diamond',
+    ariaLabel: 'Toggle diamond',
+    Icon: Diamond,
+    shortcut: '5',
+  },
+  {
+    value: 'ellipse',
+    ariaLabel: 'Toggle ellipse',
+    Icon: Circle,
+    shortcut: '6',
+  },
+  {
+    value: 'pencil',
+    ariaLabel: 'Toggle pencil',
+    Icon: Pencil,
+    shortcut: '7',
+  },
+  {
+    value: 'text',
+    ariaLabel: 'Toggle text',
+    Icon: Type,
+    shortcut: '8',
+  },
+];
 
 export function ToolBar() {
   const { currTool, setTool } = useRoughStore();
   return (
-    <div className="fixed top-4 left-1/2 transform -translate-x-1/2 bg-white p-4 rounded-lg shadow-md">
+    <div className="fixed top-4 left-1/2 transform -translate-x-1/2 bg-white p-4 rounded-lg shadow-md select-none">
       <ToggleGroup
-        className="h-3 "
+        className="h-3"
+        size={'sm'}
         type="single"
         variant={'violet'}
         value={currTool}
@@ -26,24 +94,18 @@ export function ToolBar() {
           setTool(value);
         }}
       >
-        <ToggleGroupItem value="select" aria-label="Select object">
-          <MousePointer className="h-3 w-3" />
-        </ToggleGroupItem>
-        <ToggleGroupItem value="line" aria-label="Toggle line">
-          <Minus className="h-3 w-3" />
-        </ToggleGroupItem>
-        <ToggleGroupItem value="arrow" aria-label="Toggle arrow">
-          <MoveUpRight className="h-3 w-3" />
-        </ToggleGroupItem>
-        <ToggleGroupItem value="rect" aria-label="Toggle rect">
-          <Square className="h-3 w-3" />
-        </ToggleGroupItem>
-        <ToggleGroupItem value="diamond" aria-label="Toggle diamond">
-          <Diamond className="h-3 w-3" />
-        </ToggleGroupItem>
-        <ToggleGroupItem value="ellipse" aria-label="Toggle ellipse">
-          <Circle className="h-3 w-3" />
-        </ToggleGroupItem>
+        {tools.map((tool) => (
+          <div key={tool.value} className="relative text-gray-400">
+            <ToggleGroupItem value={tool.value} aria-label={tool.ariaLabel}>
+              <tool.Icon className="h-3 w-3" />
+              {tool.shortcut && (
+                <span className="absolute text-[0.625rem] bottom-[1px] right-[2px]">
+                  {tool.shortcut}
+                </span>
+              )}
+            </ToggleGroupItem>
+          </div>
+        ))}
       </ToggleGroup>
     </div>
   );
