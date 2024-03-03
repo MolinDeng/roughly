@@ -42,13 +42,13 @@ I built it from scratch using TypeScript, NextJS, TailwindCSS, RoughJS, and Sock
 - [ ] LLM (OpenAI API) integration to auto-generate shapes
 - [ ] Redo / Undo
 - Drawing Options
-  - [ ] Stroke Color
+  - [ ] Stroke Color (include Opacity)
   - [ ] Background Fill
   - [ ] Background Fillstyle
   - [ ] Stroke Width
   - [ ] Stroke Style
   - [ ] Roughness
-  - [ ] Opacity
+  - [ ] Rounded Corners
 - [ ] Text
 - [ ] Eraser
 - [ ] Performance Optimizations

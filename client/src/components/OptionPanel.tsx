@@ -1,10 +1,12 @@
 'use client';
+
 import React from 'react';
 
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import { Ban } from 'lucide-react';
 import { useWindowSize } from '@/hooks/UseWindowSize';
 import { cn } from '@/lib/utils';
+import { useOptionStore } from '@/stores/option-store';
 
 type Opt = {
   value: string;
@@ -13,17 +15,32 @@ type Opt = {
   className?: string;
 };
 
-interface OptionProps {
+type Options = {
   title: string;
-  opts: Opt[];
-}
+  name: string;
+  values: Opt[];
+};
 
-function Option({ title, opts }: OptionProps) {
+type OptionProps = {
+  currValue: string;
+  setValue: (key: string, value: string) => void;
+} & Options;
+
+function Option({ name, title, values, setValue, currValue }: OptionProps) {
   return (
     <div>
       <p className="text-xs px-[1px] py-1">{title}</p>
-      <ToggleGroup type="single" size={'ssm'} variant={'violet'}>
-        {opts.map((opt) => (
+      <ToggleGroup
+        type="single"
+        size={'ssm'}
+        variant={'violet'}
+        value={currValue}
+        onValueChange={(value) => {
+          if (value === '') return;
+          setValue(name, value);
+        }}
+      >
+        {values.map((opt) => (
           <ToggleGroupItem
             key={opt.value}
             className={opt.className}
@@ -38,53 +55,59 @@ function Option({ title, opts }: OptionProps) {
   );
 }
 
-const options: OptionProps[] = [
+const options: Options[] = [
   {
     title: 'Stroke',
-    opts: [
+    name: 'stroke',
+    // defaultValue: 'rgba(0,0,0,1)',
+    values: [
       {
-        value: 'black',
+        value: 'rgba(0,0,0,0.8)',
         ariaLabel: 'Select black stroke',
-        html: <div className="h-3.5 w-3.5 bg-black rounded-[4px]" />,
+        html: <div className="h-3.5 w-3.5 bg-black/80 rounded-[4px]" />,
       },
       {
-        value: 'red',
+        value: 'rgba(244,63,94,0.8)',
         ariaLabel: 'Select red stroke',
-        html: <div className="h-3.5 w-3.5 bg-red-600 rounded-[4px]" />,
+        html: <div className="h-3.5 w-3.5 bg-rose-500/80 rounded-[4px]" />,
       },
       {
-        value: 'blue',
+        value: 'rgba(59,130,246,0.8)',
         ariaLabel: 'Select blue stroke',
-        html: <div className="h-3.5 w-3.5 bg-blue-600 rounded-[4px]" />,
+        html: <div className="h-3.5 w-3.5 bg-blue-500/80 rounded-[4px]" />,
       },
     ],
   },
   {
     title: 'Background',
-    opts: [
+    name: 'fill',
+    // defaultValue: 'none',
+    values: [
       {
         value: 'none',
-        ariaLabel: 'Select object',
+        ariaLabel: 'Select no background',
         html: <Ban className="h-3.5 w-3.5" />,
       },
       {
-        value: 'line',
-        ariaLabel: 'Toggle line',
-        html: <div className="h-3.5 w-3.5 bg-red-600 rounded-[4px]" />,
+        value: 'rgba(236,72,153,0.7)',
+        ariaLabel: 'Toggle teal color',
+        html: <div className="h-3.5 w-3.5 bg-pink-500/70 rounded-[4px]" />,
       },
       {
-        value: 'arrow',
-        ariaLabel: 'Toggle arrow',
-        html: <div className="h-3.5 w-3.5 bg-blue-600 rounded-[4px]" />,
+        value: 'rgba(20,184,166,0.7)',
+        ariaLabel: 'Toggle fuchsia color',
+        html: <div className="h-3.5 w-3.5 bg-teal-500/70 rounded-[4px]" />,
       },
     ],
   },
   {
     title: 'Fill',
-    opts: [
+    name: 'fillStyle',
+    // defaultValue: 'hachure',
+    values: [
       {
-        value: 'black',
-        ariaLabel: 'Select black stroke',
+        value: 'zigzag',
+        ariaLabel: 'Select zigzag fill',
         html: (
           <svg
             className="h-4 w-4"
@@ -131,8 +154,8 @@ const options: OptionProps[] = [
         ),
       },
       {
-        value: 'red',
-        ariaLabel: 'Select red stroke',
+        value: 'cross-hatch',
+        ariaLabel: 'Select cross-hatch fill',
         html: (
           <svg
             className="h-4 w-4"
@@ -184,18 +207,20 @@ const options: OptionProps[] = [
         ),
       },
       {
-        value: 'blue',
-        ariaLabel: 'Select blue stroke',
+        value: 'solid',
+        ariaLabel: 'Select solid fill',
         html: <div className="h-3.5 w-3.5 bg-black rounded-[4px]" />,
       },
     ],
   },
   {
     title: 'Stoke Width',
-    opts: [
+    name: 'strokeWidth',
+    // defaultValue: '1',
+    values: [
       {
-        value: 'select',
-        ariaLabel: 'Select object',
+        value: '1',
+        ariaLabel: 'Select 1 stroke width',
         html: (
           <svg className="h-4 w-4 " viewBox="0 0 20 20" fill="none">
             <path
@@ -209,8 +234,8 @@ const options: OptionProps[] = [
         ),
       },
       {
-        value: 'line',
-        ariaLabel: 'Toggle line',
+        value: '2',
+        ariaLabel: 'Toggle 2 stroke width',
         html: (
           <svg className="h-4 w-4 " viewBox="0 0 20 20" fill="none">
             <path
@@ -225,8 +250,8 @@ const options: OptionProps[] = [
         ),
       },
       {
-        value: 'arrow',
-        ariaLabel: 'Toggle arrow',
+        value: '3',
+        ariaLabel: 'Toggle 3 stroke width',
         html: (
           <svg className="h-4 w-4 " viewBox="0 0 20 20" fill="none">
             <path
@@ -244,10 +269,12 @@ const options: OptionProps[] = [
   },
   {
     title: 'Stoke Style',
-    opts: [
+    name: 'strokeLineDash',
+    // defaultValue: 'none',
+    values: [
       {
-        value: 'select',
-        ariaLabel: 'Select object',
+        value: 'none',
+        ariaLabel: 'Select none stroke style',
         html: (
           <svg className="h-4 w-4 " viewBox="0 0 20 20" fill="none">
             <path
@@ -261,8 +288,8 @@ const options: OptionProps[] = [
         ),
       },
       {
-        value: 'line',
-        ariaLabel: 'Toggle line',
+        value: 'd',
+        ariaLabel: 'Toggle dash stroke style',
         html: (
           <svg
             className="h-4 w-4 "
@@ -282,8 +309,8 @@ const options: OptionProps[] = [
         ),
       },
       {
-        value: 'arrow',
-        ariaLabel: 'Toggle arrow',
+        value: 'dd',
+        ariaLabel: 'Toggle dash dash stroke style',
         html: (
           <svg
             className="h-4 w-4 "
@@ -308,10 +335,12 @@ const options: OptionProps[] = [
   },
   {
     title: 'Roughness',
-    opts: [
+    name: 'roughness',
+    // defaultValue: '1',
+    values: [
       {
-        value: 'select',
-        ariaLabel: 'Select object',
+        value: '0.5',
+        ariaLabel: 'Select 0.5 roughness',
         html: (
           <svg className="h-4 w-4 " viewBox="0 0 20 20" fill="none">
             <path
@@ -324,8 +353,8 @@ const options: OptionProps[] = [
         ),
       },
       {
-        value: 'line',
-        ariaLabel: 'Toggle line',
+        value: '1',
+        ariaLabel: 'Toggle 1 roughness',
         html: (
           <svg className="h-4 w-4 " viewBox="0 0 20 20" fill="none">
             <path
@@ -339,8 +368,8 @@ const options: OptionProps[] = [
         ),
       },
       {
-        value: 'arrow',
-        ariaLabel: 'Toggle arrow',
+        value: '2',
+        ariaLabel: 'Toggle 2 roughness',
         html: (
           <svg className="h-4 w-4 " viewBox="0 0 20 20" fill="none">
             <path
@@ -359,18 +388,27 @@ const options: OptionProps[] = [
 
 export default function OptionPanel() {
   const { height } = useWindowSize();
+  const { options: selectedOpt, setOption } = useOptionStore();
+  const activeOptions = options.filter(
+    (opt) => opt.name !== 'fillStyle' || selectedOpt.fill !== 'none'
+  );
   return (
     <aside
       className={cn(
-        // max-h-[325px]
         'fixed top-[10%] left-4 w-40 bg-white shadow-lg rounded-lg overflow-auto select-none',
-        height < 600 && 'h-[54%]'
+        height < 600 && 'h-[54%]',
+        selectedOpt.fill !== 'none' ? ' max-h-[384px]' : 'max-h-[324px]'
       )}
     >
       {/* Sidebar content goes here */}
       <div className="flex flex-col items-start p-4 space-y-2">
-        {options.map((option) => (
-          <Option key={option.title} title={option.title} opts={option.opts} />
+        {activeOptions.map((option) => (
+          <Option
+            key={option.name}
+            {...option}
+            setValue={setOption}
+            currValue={(selectedOpt as any)[option.name]}
+          />
         ))}
       </div>
     </aside>

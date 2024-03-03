@@ -25,6 +25,15 @@ type RoughFillStyle =
   | 'dashed'
   | 'zigzag-line'; // TODO Some of them are not efficient to use
 
+type ConfigurableOptions = {
+  stroke: string;
+  fill: string;
+  fillStyle: RoughFillStyle;
+  strokeWidth: string;
+  strokeLineDash: string;
+  roughness: string;
+};
+
 type RoughOptions = {
   fillStyle?: RoughFillStyle;
 } & Options;

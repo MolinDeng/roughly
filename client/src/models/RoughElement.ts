@@ -128,7 +128,7 @@ export class RoughElement {
       this.drawable = g.path(svgPath, this.options);
     } else if (this.type === 'arrow') {
       const arrowLength = Math.min(
-        20,
+        30,
         distance({ x: x1, y: y1 }, { x: x2, y: y2 }) / 4
       );
       const Q = { x: this.qx!, y: this.qy! };
