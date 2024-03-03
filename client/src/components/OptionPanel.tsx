@@ -7,6 +7,8 @@ import { Ban } from 'lucide-react';
 import { useWindowSize } from '@/hooks/UseWindowSize';
 import { cn } from '@/lib/utils';
 import { useOptionStore } from '@/stores/option-store';
+import { useToolStore } from '@/stores/tool-store';
+import { RoughTool } from '@/types/type';
 
 type Opt = {
   value: string;
@@ -386,17 +388,26 @@ const options: Options[] = [
   },
 ];
 
-export default function OptionPanel() {
-  const { height } = useWindowSize();
-  const { options: selectedOpt, setOption } = useOptionStore();
-  const activeOptions = options.filter(
-    (opt) => opt.name !== 'fillStyle' || selectedOpt.fill !== 'none'
-  );
+export default function OptionPanel({
+  windowHeight,
+  currTool,
+}: {
+  currTool: RoughTool;
+  windowHeight: number;
+}) {
+  const { options: selectedOpt, setKeyValue } = useOptionStore();
+  const activeOptions = options
+    .filter((opt) => opt.name !== 'fillStyle' || selectedOpt.fill !== 'none')
+    .filter(
+      (opt) =>
+        (currTool !== 'arrow' && currTool !== 'line') ||
+        (opt.name !== 'fill' && opt.name !== 'fillStyle')
+    );
   return (
     <aside
       className={cn(
         'fixed top-[10%] left-4 w-40 bg-white shadow-lg rounded-lg overflow-auto select-none',
-        height < 600 && 'h-[54%]',
+        windowHeight < 600 && 'h-[54%]',
         selectedOpt.fill !== 'none' ? ' max-h-[384px]' : 'max-h-[324px]'
       )}
     >
@@ -406,7 +417,7 @@ export default function OptionPanel() {
           <Option
             key={option.name}
             {...option}
-            setValue={setOption}
+            setValue={setKeyValue}
             currValue={(selectedOpt as any)[option.name]}
           />
         ))}

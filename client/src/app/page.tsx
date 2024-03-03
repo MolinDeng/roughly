@@ -1,6 +1,5 @@
 // import RoughCanvas from '@/components/RoughCanvas';
 import Author from '@/components/Author';
-import OptionPanel from '@/components/OptionPanel';
 import { ToolBar } from '@/components/ToolBar';
 import dynamic from 'next/dynamic';
 
@@ -13,7 +12,6 @@ export default function Home() {
   return (
     <main className="h-screen w-screen">
       <ToolBar />
-      <OptionPanel />
       <RoughCanvasNoSSR />
       <Author />
     </main>

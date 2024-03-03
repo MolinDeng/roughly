@@ -1,12 +1,12 @@
 import { RoughTool } from '@/types/type';
 import { create } from 'zustand';
 
-interface RoughStore {
+interface ToolStore {
   currTool: RoughTool;
   setTool: (t: RoughTool) => void;
 }
 
-export const useRoughStore = create<RoughStore>((set) => ({
+export const useToolStore = create<ToolStore>((set) => ({
   currTool: 'line',
   setTool: (t: RoughTool) => set({ currTool: t }),
 }));

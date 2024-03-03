@@ -6,12 +6,13 @@ import { useWindowSize } from '@/hooks/UseWindowSize';
 import { getClickPayload } from '@/lib/rough-utils';
 import { RoughElement } from '@/models/RoughElement';
 import { RoughFactor } from '@/models/RoughFactor';
-import { useRoughStore } from '@/stores/rough-store';
+import { useToolStore } from '@/stores/tool-store';
 import { Anchor, CanvasState, ClickPayload, Point } from '@/types/type';
 import { Loader } from 'lucide-react';
 import { useOptionStore } from '@/stores/option-store';
 
 import rough from 'roughjs';
+import OptionPanel from './OptionPanel';
 
 const cursorFromAnchor = (anchor: Anchor): string => {
   if (anchor === 'inside') return 'move';
@@ -30,8 +31,8 @@ const RoughCanvas: FC<RoughCanvasProps> = ({}) => {
 
   const [elements, setElements] = useState<RoughElement[]>([]);
 
-  const { currTool, setTool } = useRoughStore();
-  const { options } = useOptionStore();
+  const { currTool, setTool } = useToolStore();
+  const { options, setOptions, resetOptions } = useOptionStore();
   const size = useWindowSize();
   const { img: bg, loaded: bgLoaded } = usePapyrusBg();
   // Key listener
@@ -117,6 +118,11 @@ const RoughCanvas: FC<RoughCanvasProps> = ({}) => {
     const { width, height } = ctx.canvas.getBoundingClientRect();
     ctx.fillRect(0, 0, width, height);
     // create rough canvas
+    // update selected element's options: options updated -> useEffect -> ele update drawable
+    const { ele } = selectPayload.current;
+    if (currTool === 'select' && ele !== null)
+      ele.updateOptions({ ...options });
+    // draw elements
     const rc = rough.canvas(canvasRef.current);
     elements
       .filter((ele) => ele.isDrawable())
@@ -124,10 +130,9 @@ const RoughCanvas: FC<RoughCanvasProps> = ({}) => {
         rc.draw(drawable!);
       });
     // Draw the Gizmo for the selected element
-    const { ele } = selectPayload.current;
     if (currTool === 'select' && ele !== null)
       ele.getGizmo().forEach((g) => rc.draw(g));
-  }, [canvasRef, elements, size, bg]);
+  }, [canvasRef, elements, size, bg, options]);
 
   const handleMouseDown = (event: React.MouseEvent<HTMLCanvasElement>) => {
     const { clientX, clientY } = event;
@@ -136,6 +141,8 @@ const RoughCanvas: FC<RoughCanvasProps> = ({}) => {
       const payload = getClickPayload(elements, clientX, clientY);
       if (payload.ele !== null) {
         const { ele, anchor } = payload;
+        // display ele's options to the option panel
+        setOptions(ele.options);
         const { ele: currEle } = selectPayload.current;
         // update the action state
         if (anchor === 'inside') {
@@ -143,7 +150,8 @@ const RoughCanvas: FC<RoughCanvasProps> = ({}) => {
           canvasState.current = 'moving';
         } // if (ele === currEle)
         else canvasState.current = 'resize';
-      }
+      } // reset the option panel
+      else resetOptions();
       // set the selected payload
       selectPayload.current = payload;
     } else {
@@ -187,7 +195,7 @@ const RoughCanvas: FC<RoughCanvasProps> = ({}) => {
         ele.onNormalize();
         // setElements([...elements]); // not be necessary
         // after drawing, set the tool to select
-        if (canvasState.current === 'drawing') setTool('select');
+        setTool('select');
       } // reset the selected payload
       else selectPayload.current = { anchor: null, ele: null };
     } else if (canvasState.current === 'resize') {
@@ -204,14 +212,27 @@ const RoughCanvas: FC<RoughCanvasProps> = ({}) => {
     canvasState.current = 'idle';
   };
 
+  const hidden = currTool === 'select' && selectPayload.current.ele === null;
   return bgLoaded ? (
-    <canvas
-      ref={canvasRef}
-      onMouseDown={handleMouseDown}
-      onMouseMove={handleMouseMove}
-      onMouseUp={handleMouseUp}
-      className="border-2 border-foreground rounded-md" // ! Debug only
-    />
+    <>
+      {!hidden && (
+        <OptionPanel
+          windowHeight={size.height}
+          currTool={
+            selectPayload.current.ele === null
+              ? currTool
+              : selectPayload.current.ele.type
+          }
+        />
+      )}
+      <canvas
+        ref={canvasRef}
+        onMouseDown={handleMouseDown}
+        onMouseMove={handleMouseMove}
+        onMouseUp={handleMouseUp}
+        className="border-2 border-foreground rounded-md" // ! Debug only
+      />
+    </>
   ) : (
     <div className="flex justify-center items-center h-screen">
       <Loader className="h-8 w-8 animate-spin" />

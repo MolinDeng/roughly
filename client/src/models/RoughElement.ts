@@ -1,8 +1,66 @@
-import { Anchor, EleSnapshot, RoughOptions, RoughTool } from '@/types/type';
+import {
+  Anchor,
+  ConfigurableOptions,
+  EleSnapshot,
+  RoughOptions,
+  RoughTool,
+} from '@/types/type';
 import { Drawable } from 'roughjs/bin/core';
 import short from 'short-uuid';
 import rough from 'roughjs';
 import { distance, isInTriangle, nearPoint, slope } from '@/lib/math';
+
+const defaultRoughOptions: RoughOptions = {
+  // configurable options
+  stroke: 'rgba(0,0,0,1)',
+  fill: undefined,
+  fillStyle: 'hachure',
+  strokeWidth: 1,
+  strokeLineDash: undefined,
+  roughness: 0.5,
+  // non-configurable options
+  bowing: 2, // depending on the roughness
+  fillWeight: 1, // thicker lines for hachure (if not set, strokeWidth is strokeWidth / 2)
+  //   hachureAngle: 60, // angle of hachure,
+  //   hachureGap: 1,
+  // simplification: 0.5, // useful for AI-generated SVG
+};
+
+const parseOptions = (
+  type: RoughTool,
+  options: ConfigurableOptions
+): RoughOptions => {
+  const ro = { ...defaultRoughOptions };
+  const { stroke, fill, fillStyle, strokeWidth, strokeLineDash, roughness } =
+    options;
+  // stroke
+  ro.stroke = stroke;
+  // fill
+  if (fill === 'none') ro.fill = undefined;
+  else ro.fill = fill;
+  // fillStyle
+  if (fill !== 'none') ro.fillStyle = fillStyle;
+  // strokeWidth
+  ro.strokeWidth = parseFloat(strokeWidth);
+  // strokeLineDash
+  if (strokeLineDash === 'none') ro.strokeLineDash = undefined;
+  else if (strokeLineDash === 'd') ro.strokeLineDash = [8, 8];
+  else if (strokeLineDash === 'dd') ro.strokeLineDash = [4, 4];
+  else ro.strokeLineDash = undefined;
+  // roughness
+  ro.roughness = parseFloat(roughness);
+
+  // calculate unconventional options
+  ro.bowing = ro.roughness * 2;
+
+  // clean data for certain types
+  if (type === 'line' || type === 'arrow') {
+    ro.fill = undefined;
+    ro.fillStyle = 'hachure';
+  }
+
+  return ro;
+};
 
 export class RoughElement {
   type: RoughTool;
@@ -12,17 +70,17 @@ export class RoughElement {
   x2: number;
   y2: number;
   drawable: Drawable | null;
-  gizmo: Drawable | null;
-  options: RoughOptions;
+  options: ConfigurableOptions;
   // * For moving functionality
   private snapshot?: EleSnapshot;
+  private seed: number;
   // * For arrow and line only
   qx?: number;
   qy?: number;
 
   constructor(
     type: RoughTool,
-    options: RoughOptions,
+    options: ConfigurableOptions,
     x1: number,
     y1: number,
     x2: number,
@@ -35,10 +93,9 @@ export class RoughElement {
     this.x2 = x2;
     this.y2 = y2;
     this.drawable = null;
-    this.gizmo = null;
     this.options = options;
     // fix seed for consistent hachure
-    this.options.seed = Math.floor(Math.random() * 2 ** 31);
+    this.seed = Math.floor(Math.random() * 2 ** 31);
   }
 
   isDrawable() {
@@ -63,16 +120,16 @@ export class RoughElement {
   getGizmo(): Drawable[] {
     const g = rough.generator();
     const opt1 = {
-      stroke: 'black',
-      strokeWidth: 0.5,
+      stroke: 'purple',
+      strokeWidth: 0.25,
       roughness: 0,
-      strokeLineDash: [5, 5],
+      // strokeLineDash: [5, 5],
     };
     const opt2 = {
       stroke: 'black',
       fillStyle: 'solid',
       fill: 'purple',
-      strokeWidth: 0.5,
+      strokeWidth: 0.25,
       roughness: 0,
     };
     let { x1, y1, x2, y2, type, qx, qy } = this;
@@ -84,7 +141,8 @@ export class RoughElement {
         Math.min(y1, y2),
         Math.max(y1, y2),
       ];
-      const [x1p, y1p, x2p, y2p] = [x1 - 5, y1 - 5, x2 + 5, y2 + 5];
+      const ext = 8;
+      const [x1p, y1p, x2p, y2p] = [x1 - ext, y1 - ext, x2 + ext, y2 + ext];
       // draw a rectangle using polygon
       const rect = g.rectangle(x1p, y1p, x2p - x1p, y2p - y1p, opt1);
       // draw control points
@@ -116,6 +174,9 @@ export class RoughElement {
   }
 
   private render() {
+    const ro = parseOptions(this.type, this.options);
+    ro.seed = this.seed;
+
     const { x1, y1, x2, y2 } = this;
     const g = rough.generator();
     if (this.type === 'line') {
@@ -125,7 +186,7 @@ export class RoughElement {
           Q ${Q.x} ${Q.y} ${x2} ${y2}
           M ${x2} ${y2}
         `;
-      this.drawable = g.path(svgPath, this.options);
+      this.drawable = g.path(svgPath, ro);
     } else if (this.type === 'arrow') {
       const arrowLength = Math.min(
         30,
@@ -149,9 +210,9 @@ export class RoughElement {
           L ${arrowPoint2.x} ${arrowPoint2.y}
         `;
 
-      this.drawable = g.path(svgPath, this.options);
+      this.drawable = g.path(svgPath, ro);
     } else if (this.type === 'rect') {
-      this.drawable = g.rectangle(x1, y1, x2 - x1, y2 - y1, this.options);
+      this.drawable = g.rectangle(x1, y1, x2 - x1, y2 - y1, ro);
     } else if (this.type === 'diamond') {
       const midX = (x1 + x2) / 2;
       const midY = (y1 + y2) / 2;
@@ -162,7 +223,7 @@ export class RoughElement {
           [midX, y2],
           [x1, midY],
         ],
-        this.options
+        ro
       );
     } else if (this.type === 'ellipse') {
       this.drawable = g.ellipse(
@@ -170,9 +231,14 @@ export class RoughElement {
         (y1 + y2) / 2,
         x2 - x1,
         y2 - y1,
-        this.options
+        ro
       );
     }
+  }
+
+  updateOptions(options: ConfigurableOptions) {
+    this.options = options;
+    this.render();
   }
 
   onDraw(x2: number, y2: number) {
