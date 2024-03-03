@@ -43,11 +43,11 @@ I built it from scratch using TypeScript, NextJS, TailwindCSS, RoughJS, and Sock
 - [ ] Redo / Undo
 - Drawing Options
   - [ ] Stroke Color (include Opacity)
-  - [ ] Background Fill
-  - [ ] Background Fillstyle
-  - [ ] Stroke Width
-  - [ ] Stroke Style
-  - [ ] Roughness
+  - [x] Background Fill
+  - [x] Background Fillstyle
+  - [x] Stroke Width
+  - [x] Stroke Style
+  - [x] Roughness
   - [ ] Rounded Corners
 - [ ] Text
 - [ ] Eraser
