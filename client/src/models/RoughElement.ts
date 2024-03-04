@@ -126,7 +126,7 @@ export class RoughElement {
       // strokeLineDash: [5, 5],
     };
     const opt2 = {
-      stroke: 'black',
+      stroke: 'purple',
       fillStyle: 'solid',
       fill: 'purple',
       strokeWidth: 0.25,
@@ -135,21 +135,20 @@ export class RoughElement {
     let { x1, y1, x2, y2, type, qx, qy } = this;
     if (type === 'rect' || type === 'ellipse' || type === 'diamond') {
       // expand the rectangle a little bit
-      [x1, x2, y1, y2] = [
-        Math.min(x1, x2),
-        Math.max(x1, x2),
-        Math.min(y1, y2),
-        Math.max(y1, y2),
-      ];
       const ext = 8;
-      const [x1p, y1p, x2p, y2p] = [x1 - ext, y1 - ext, x2 + ext, y2 + ext];
+      [x1, x2, y1, y2] = [
+        Math.min(x1, x2) - ext,
+        Math.max(x1, x2) + ext,
+        Math.min(y1, y2) - ext,
+        Math.max(y1, y2) + ext,
+      ];
       // draw a rectangle using polygon
-      const rect = g.rectangle(x1p, y1p, x2p - x1p, y2p - y1p, opt1);
+      const rect = g.rectangle(x1, y1, x2 - x1, y2 - y1, opt1);
       // draw control points
-      const p1 = g.circle(x1p, y1p, 5, opt2);
-      const p2 = g.circle(x2p, y1p, 5, opt2);
-      const p3 = g.circle(x2p, y2p, 5, opt2);
-      const p4 = g.circle(x1p, y2p, 5, opt2);
+      const p1 = g.circle(x1, y1, 5, opt2);
+      const p2 = g.circle(x2, y1, 5, opt2);
+      const p3 = g.circle(x2, y2, 5, opt2);
+      const p4 = g.circle(x1, y2, 5, opt2);
       return [rect, p1, p2, p3, p4];
     } else if (type === 'line' || type === 'arrow') {
       // draw three control points
@@ -324,6 +323,7 @@ export class RoughElement {
 
   anchorWithinMe(x: number, y: number): Anchor {
     const { type, x1, y1, x2, y2, qx, qy } = this;
+    const ext = 8;
     if (type === 'line' || type === 'arrow') {
       let inside: Anchor = null;
       if (Math.abs(slope(x1, y1, x2, y2) - slope(x1, y1, qx!, qy!)) < 0.15) {
@@ -347,17 +347,20 @@ export class RoughElement {
       const quadratic = nearPoint(x, y, qx!, qy!) ? 'q' : null;
       return quadratic || start || end || inside;
     } else if (type === 'rect') {
-      const topLeft = nearPoint(x, y, x1, y1) ? 'tl' : null;
-      const topRight = nearPoint(x, y, x2, y1) ? 'tr' : null;
-      const bottomLeft = nearPoint(x, y, x1, y2) ? 'bl' : null;
-      const bottomRight = nearPoint(x, y, x2, y2) ? 'br' : null;
-      const inside = x >= x1 && x <= x2 && y >= y1 && y <= y2 ? 'inside' : null;
+      const [gx1, gy1, gx2, gy2] = [x1 - ext, y1 - ext, x2 + ext, y2 + ext];
+      const topLeft = nearPoint(x, y, gx1, gy1) ? 'tl' : null;
+      const topRight = nearPoint(x, y, gx2, gy1) ? 'tr' : null;
+      const bottomLeft = nearPoint(x, y, gx1, gy2) ? 'bl' : null;
+      const bottomRight = nearPoint(x, y, gx2, gy2) ? 'br' : null;
+      const inside =
+        x >= gx1 && x <= gx2 && y >= gy1 && y <= gy2 ? 'inside' : null;
       return topLeft || topRight || bottomLeft || bottomRight || inside;
     } else if (type === 'ellipse') {
-      const topLeft = nearPoint(x, y, x1, y1) ? 'tl' : null;
-      const topRight = nearPoint(x, y, x2, y1) ? 'tr' : null;
-      const bottomLeft = nearPoint(x, y, x1, y2) ? 'bl' : null;
-      const bottomRight = nearPoint(x, y, x2, y2) ? 'br' : null;
+      const [gx1, gy1, gx2, gy2] = [x1 - ext, y1 - ext, x2 + ext, y2 + ext];
+      const topLeft = nearPoint(x, y, gx1, gy1) ? 'tl' : null;
+      const topRight = nearPoint(x, y, gx2, gy1) ? 'tr' : null;
+      const bottomLeft = nearPoint(x, y, gx1, gy2) ? 'bl' : null;
+      const bottomRight = nearPoint(x, y, gx2, gy2) ? 'br' : null;
       // TODO: Maybe just use the rectangle formula for the ellipse
       const center = { x: (x1 + x2) / 2, y: (y1 + y2) / 2 };
       const rx = Math.abs(x2 - x1) / 2;
@@ -368,10 +371,11 @@ export class RoughElement {
           : null;
       return topLeft || topRight || bottomLeft || bottomRight || inside;
     } else if (type === 'diamond') {
-      const topLeft = nearPoint(x, y, x1, y1) ? 'tl' : null;
-      const topRight = nearPoint(x, y, x2, y1) ? 'tr' : null;
-      const bottomLeft = nearPoint(x, y, x1, y2) ? 'bl' : null;
-      const bottomRight = nearPoint(x, y, x2, y2) ? 'br' : null;
+      const [gx1, gy1, gx2, gy2] = [x1 - ext, y1 - ext, x2 + ext, y2 + ext];
+      const topLeft = nearPoint(x, y, gx1, gy1) ? 'tl' : null;
+      const topRight = nearPoint(x, y, gx2, gy1) ? 'tr' : null;
+      const bottomLeft = nearPoint(x, y, gx1, gy2) ? 'bl' : null;
+      const bottomRight = nearPoint(x, y, gx2, gy2) ? 'br' : null;
       const midX = (x1 + x2) / 2;
       const midY = (y1 + y2) / 2;
       const inside =
