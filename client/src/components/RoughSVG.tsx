@@ -214,7 +214,6 @@ export default function RoughSVG() {
       : selectPayload.current.ele.type;
   return (
     <>
-      <OptionPanel height={height} currTool={optPanelType} hidden={hidden} />
       <svg
         ref={svgRef}
         className="w-full h-full"
@@ -223,6 +222,7 @@ export default function RoughSVG() {
         onMouseMove={handleMouseMove}
         onMouseUp={handleMouseUp}
       />
+      <OptionPanel height={height} currTool={optPanelType} hidden={hidden} />
     </>
   );
 }

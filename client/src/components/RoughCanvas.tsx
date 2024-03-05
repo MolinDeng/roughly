@@ -209,13 +209,13 @@ const RoughCanvas: FC<RoughCanvasProps> = ({}) => {
       : selectPayload.current.ele.type;
   return (
     <>
-      <OptionPanel height={height} currTool={optPanelType} hidden={hidden} />
       <canvas
         ref={canvasRef}
         onMouseDown={handleMouseDown}
         onMouseMove={handleMouseMove}
         onMouseUp={handleMouseUp}
       />
+      <OptionPanel height={height} currTool={optPanelType} hidden={hidden} />
     </>
   );
 };
