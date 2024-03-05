@@ -221,7 +221,7 @@ const options: Options[] = [
     // defaultValue: '1',
     values: [
       {
-        value: '1',
+        value: '1.25',
         ariaLabel: 'Select 1 stroke width',
         html: (
           <svg className="h-4 w-4 " viewBox="0 0 20 20" fill="none">
@@ -236,7 +236,7 @@ const options: Options[] = [
         ),
       },
       {
-        value: '2',
+        value: '2.5',
         ariaLabel: 'Toggle 2 stroke width',
         html: (
           <svg className="h-4 w-4 " viewBox="0 0 20 20" fill="none">
@@ -252,7 +252,7 @@ const options: Options[] = [
         ),
       },
       {
-        value: '3',
+        value: '3.75',
         ariaLabel: 'Toggle 3 stroke width',
         html: (
           <svg className="h-4 w-4 " viewBox="0 0 20 20" fill="none">
@@ -355,8 +355,8 @@ const options: Options[] = [
         ),
       },
       {
-        value: '1',
-        ariaLabel: 'Toggle 1 roughness',
+        value: '1.15',
+        ariaLabel: 'Toggle 1.25 roughness',
         html: (
           <svg className="h-4 w-4 " viewBox="0 0 20 20" fill="none">
             <path
@@ -370,8 +370,8 @@ const options: Options[] = [
         ),
       },
       {
-        value: '2',
-        ariaLabel: 'Toggle 2 roughness',
+        value: '1.65',
+        ariaLabel: 'Toggle 1.65 roughness',
         html: (
           <svg className="h-4 w-4 " viewBox="0 0 20 20" fill="none">
             <path
@@ -389,11 +389,13 @@ const options: Options[] = [
 ];
 
 export default function OptionPanel({
-  windowHeight,
+  height: windowH,
   currTool,
+  hidden,
 }: {
   currTool: RoughTool;
-  windowHeight: number;
+  height: number;
+  hidden: boolean;
 }) {
   const { options: selectedOpt, setKeyValue } = useOptionStore();
   const activeOptions = options
@@ -407,8 +409,9 @@ export default function OptionPanel({
     <aside
       className={cn(
         'fixed top-[10%] left-4 w-40 bg-white shadow-lg rounded-lg overflow-auto select-none',
-        windowHeight < 600 && 'h-[54%]',
-        selectedOpt.fill !== 'none' ? ' max-h-[384px]' : 'max-h-[324px]'
+        windowH < 600 && 'h-[54%]',
+        selectedOpt.fill !== 'none' ? ' max-h-[384px]' : 'max-h-[324px]',
+        hidden && 'hidden'
       )}
     >
       {/* Sidebar content goes here */}

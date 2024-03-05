@@ -12,7 +12,7 @@ const d: ConfigurableOptions = {
   stroke: 'rgba(0,0,0,0.8)',
   fill: 'none',
   fillStyle: 'zigzag',
-  strokeWidth: '1',
+  strokeWidth: '1.25',
   strokeLineDash: 'none',
   roughness: '0.5',
 };

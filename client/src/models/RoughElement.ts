@@ -12,10 +12,10 @@ import { distance, isInTriangle, nearPoint, slope } from '@/lib/math';
 
 const defaultRoughOptions: RoughOptions = {
   // configurable options
-  stroke: 'rgba(0,0,0,1)',
+  stroke: 'rgba(0,0,0,0.8)',
   fill: undefined,
   fillStyle: 'hachure',
-  strokeWidth: 1,
+  strokeWidth: 1.25,
   strokeLineDash: undefined,
   roughness: 0.5,
   // non-configurable options
