@@ -18,6 +18,7 @@ I built it from scratch using TypeScript, NextJS, TailwindCSS, RoughJS, and Sock
 - [x] OOP-refactor
 - [x] Fix Randomness of a single shape
 - [x] Draw Gizmo when a shape is selected
+- [ ] Change Canvas to SVG
 - Shape Creation
   - [x] Line
   - [x] Curve Line (using SVG)
@@ -29,15 +30,13 @@ I built it from scratch using TypeScript, NextJS, TailwindCSS, RoughJS, and Sock
   - [x] Bezier Arrow (using SVG)
   - [ ] Circle (pressing Shift while drawing Ellipse)
   - [ ] More shapes using SVG or Polygon
-  - [ ] Freehand Drawing
-  - [ ] Text
 - Shape Manipulation
   - [x] Move
   - [x] Resize
   - [x] Select
   - [ ] Rotate (using Matrix ?)
   - [x] Delete
-- [ ] Keyboard Shortcuts
+- [x] Keyboard Shortcuts
 - [ ] Real-time collaboration
 - [ ] LLM (OpenAI API) integration to auto-generate shapes
 - [ ] Redo / Undo
@@ -49,6 +48,7 @@ I built it from scratch using TypeScript, NextJS, TailwindCSS, RoughJS, and Sock
   - [x] Stroke Style
   - [x] Roughness
   - [ ] Rounded Corners
+- [ ] Freehand Drawing
 - [ ] Text
 - [ ] Eraser
 - [ ] Performance Optimizations
