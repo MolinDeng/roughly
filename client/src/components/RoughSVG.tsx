@@ -221,7 +221,10 @@ export default function RoughSVG() {
         onMouseDown={handleMouseDown}
         onMouseMove={handleMouseMove}
         onMouseUp={handleMouseUp}
-      />
+      >
+        <g />
+        <g />
+      </svg>
       <OptionPanel height={height} currTool={optPanelType} hidden={hidden} />
     </>
   );

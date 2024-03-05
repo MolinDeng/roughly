@@ -15,8 +15,8 @@ const RoughSVGNoSSR = dynamic(() => import('@/components/RoughSVG'), {
 export default function Home() {
   return (
     <main className="h-screen w-screen">
-      <RoughSVGNoSSR />
-      {/* <RoughCanvasNoSSR /> */}
+      {/* <RoughSVGNoSSR /> */}
+      <RoughCanvasNoSSR />
       <ToolBar />
       <Author />
     </main>
