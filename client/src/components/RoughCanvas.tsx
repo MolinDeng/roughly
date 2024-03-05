@@ -1,14 +1,12 @@
 'use client';
 
 import { FC, useEffect, useRef, useState } from 'react';
-import usePapyrusBg from '@/hooks/UsePapyrusBg';
 import { useWindowSize } from '@/hooks/UseWindowSize';
 import { getClickPayload } from '@/lib/rough-utils';
 import { RoughElement } from '@/models/RoughElement';
 import { RoughFactor } from '@/models/RoughFactor';
 import { useToolStore } from '@/stores/tool-store';
 import { Anchor, CanvasState, ClickPayload, Point } from '@/types/type';
-import { Loader } from 'lucide-react';
 import { useOptionStore } from '@/stores/option-store';
 
 import rough from 'roughjs';
@@ -33,8 +31,7 @@ const RoughCanvas: FC<RoughCanvasProps> = ({}) => {
 
   const { currTool, setTool } = useToolStore();
   const { options, setOptions, resetOptions } = useOptionStore();
-  const size = useWindowSize();
-  const { img: bg, loaded: bgLoaded } = usePapyrusBg();
+  const { height, width } = useWindowSize();
   // Key listener
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
@@ -108,22 +105,15 @@ const RoughCanvas: FC<RoughCanvasProps> = ({}) => {
     const ctx = canvasRef.current.getContext('2d');
     if (!ctx) return;
     // resize the canvas
-    canvasRef.current.width = size.width - 10; // ! -10 for debug only
-    canvasRef.current.height = size.height - 10; // ! -10 for debug only
-    // create grainy background
-    if (bgLoaded && bg) {
-      const pat = ctx.createPattern(bg, 'repeat');
-      ctx.fillStyle = pat as CanvasPattern;
-    } else ctx.fillStyle = '#fff'; // white
-    const { width, height } = ctx.canvas.getBoundingClientRect();
-    ctx.fillRect(0, 0, width, height);
-    // create rough canvas
+    canvasRef.current.width = width;
+    canvasRef.current.height = height;
+    // ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
+    const rc = rough.canvas(canvasRef.current);
     // update selected element's options: options updated -> useEffect -> ele update drawable
     const { ele } = selectPayload.current;
     if (currTool === 'select' && ele !== null)
       ele.updateOptions({ ...options });
     // draw elements
-    const rc = rough.canvas(canvasRef.current);
     elements
       .filter((ele) => ele.isDrawable())
       .forEach(({ drawable }) => {
@@ -132,7 +122,7 @@ const RoughCanvas: FC<RoughCanvasProps> = ({}) => {
     // Draw the Gizmo for the selected element
     if (currTool === 'select' && ele !== null)
       ele.getGizmo().forEach((g) => rc.draw(g));
-  }, [canvasRef, elements, size, bg, options]);
+  }, [canvasRef, elements, height, width, options]);
 
   const handleMouseDown = (event: React.MouseEvent<HTMLCanvasElement>) => {
     const { clientX, clientY } = event;
@@ -217,25 +207,16 @@ const RoughCanvas: FC<RoughCanvasProps> = ({}) => {
     selectPayload.current.ele === null
       ? currTool
       : selectPayload.current.ele.type;
-  return bgLoaded ? (
+  return (
     <>
-      <OptionPanel
-        height={size.height}
-        currTool={optPanelType}
-        hidden={hidden}
-      />
+      <OptionPanel height={height} currTool={optPanelType} hidden={hidden} />
       <canvas
         ref={canvasRef}
         onMouseDown={handleMouseDown}
         onMouseMove={handleMouseMove}
         onMouseUp={handleMouseUp}
-        className="border-2 border-foreground rounded-md" // ! Debug only
       />
     </>
-  ) : (
-    <div className="flex justify-center items-center h-screen">
-      <Loader className="h-8 w-8 animate-spin" />
-    </div>
   );
 };
 
