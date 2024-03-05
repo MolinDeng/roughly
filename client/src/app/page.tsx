@@ -4,9 +4,9 @@ import { ToolBar } from '@/components/ToolBar';
 import dynamic from 'next/dynamic';
 
 // No SSR for canvas
-// const RoughCanvasNoSSR = dynamic(() => import('@/components/RoughCanvas'), {
-//   ssr: false,
-// });
+const RoughCanvasNoSSR = dynamic(() => import('@/components/RoughCanvas'), {
+  ssr: false,
+});
 
 const RoughSVGNoSSR = dynamic(() => import('@/components/RoughSVG'), {
   ssr: false,
