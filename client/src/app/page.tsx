@@ -8,9 +8,9 @@ const RoughCanvasNoSSR = dynamic(() => import('@/components/RoughCanvas'), {
   ssr: false,
 });
 
-const RoughSVGNoSSR = dynamic(() => import('@/components/RoughSVG'), {
-  ssr: false,
-});
+// const RoughSVGNoSSR = dynamic(() => import('@/components/RoughSVG'), {
+//   ssr: false,
+// });
 
 export default function Home() {
   return (

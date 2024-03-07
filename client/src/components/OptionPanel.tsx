@@ -4,11 +4,16 @@ import React from 'react';
 
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import { Ban } from 'lucide-react';
-import { useWindowSize } from '@/hooks/UseWindowSize';
 import { cn } from '@/lib/utils';
 import { useOptionStore } from '@/stores/option-store';
-import { useToolStore } from '@/stores/tool-store';
 import { RoughTool } from '@/types/type';
+import { Separator } from '@/components/ui/separator';
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from '@/components/ui/popover';
+import ColorPickerButton from './ColorPickerButton';
 
 type Opt = {
   value: string;
@@ -52,6 +57,10 @@ function Option({ name, title, values, setValue, currValue }: OptionProps) {
             {opt.html}
           </ToggleGroupItem>
         ))}
+        <Separator className="bg-gray-400 h-4" orientation="vertical" />
+        {(name === 'stroke' || name === 'fill') && (
+          <ColorPickerButton currValue={currValue} />
+        )}
       </ToggleGroup>
     </div>
   );
@@ -69,9 +78,9 @@ const options: Options[] = [
         html: <div className="h-3.5 w-3.5 bg-black/80 rounded-[4px]" />,
       },
       {
-        value: 'rgba(244,63,94,0.8)',
-        ariaLabel: 'Select red stroke',
-        html: <div className="h-3.5 w-3.5 bg-rose-500/80 rounded-[4px]" />,
+        value: 'rgba(249,115,22,0.8)',
+        ariaLabel: 'Select orange stroke',
+        html: <div className="h-3.5 w-3.5 bg-orange-500/80 rounded-[4px]" />,
       },
       {
         value: 'rgba(59,130,246,0.8)',
