@@ -3,17 +3,14 @@
 import React from 'react';
 
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
-import { Ban } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useOptionStore } from '@/stores/option-store';
 import { RoughTool } from '@/types/type';
 import { Separator } from '@/components/ui/separator';
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from '@/components/ui/popover';
 import ColorPickerButton from './ColorPickerButton';
+import Checkboard from './Checkboard';
+import { useColorPickerStore } from '@/stores/colorpicker-store';
+import ColorPicker from './ColorPicker';
 
 type Opt = {
   value: string;
@@ -57,9 +54,11 @@ function Option({ name, title, values, setValue, currValue }: OptionProps) {
             {opt.html}
           </ToggleGroupItem>
         ))}
-        <Separator className="bg-gray-400 h-4" orientation="vertical" />
         {(name === 'stroke' || name === 'fill') && (
-          <ColorPickerButton currValue={currValue} />
+          <>
+            <Separator className="bg-gray-400 h-4" orientation="vertical" />
+            <ColorPickerButton currValue={currValue} for={name} />
+          </>
         )}
       </ToggleGroup>
     </div>
@@ -97,7 +96,7 @@ const options: Options[] = [
       {
         value: 'none',
         ariaLabel: 'Select no background',
-        html: <Ban className="h-3.5 w-3.5" />,
+        html: <Checkboard className="h-3.5 w-3.5 rounded-[4px]" />,
       },
       {
         value: 'rgba(236,72,153,0.7)',
@@ -233,7 +232,7 @@ const options: Options[] = [
         value: '1.25',
         ariaLabel: 'Select 1 stroke width',
         html: (
-          <svg className="h-4 w-4 " viewBox="0 0 20 20" fill="none">
+          <svg className="h-4 w-4" viewBox="0 0 20 20" fill="none">
             <path
               d="M4.167 10h11.666"
               stroke="black"
@@ -414,26 +413,43 @@ export default function OptionPanel({
         (currTool !== 'arrow' && currTool !== 'line') ||
         (opt.name !== 'fill' && opt.name !== 'fillStyle')
     );
+  const { active, name: optName, setActive } = useColorPickerStore();
+
+  // if panel hidden, close color picker and set active to false
+  if (active && hidden) setActive(false);
   return (
-    <aside
-      className={cn(
-        'fixed top-[10%] left-4 w-40 bg-white shadow-lg rounded-lg overflow-auto select-none',
-        windowH < 600 && 'h-[54%]',
-        selectedOpt.fill !== 'none' ? ' max-h-[384px]' : 'max-h-[324px]',
-        hidden && 'hidden'
+    <>
+      <aside
+        className={cn(
+          'fixed top-[10%] left-4 w-40 bg-white shadow-lg rounded-lg overflow-auto select-none',
+          windowH < 600 && 'h-[54%]',
+          selectedOpt.fill !== 'none' ? ' max-h-[384px]' : 'max-h-[324px]',
+          hidden && 'hidden'
+        )}
+      >
+        {/* Sidebar content goes here */}
+        <div className="flex flex-col items-start p-4 space-y-2">
+          {activeOptions.map((option) => (
+            <Option
+              key={option.name}
+              {...option}
+              setValue={(key: string, value: string) => {
+                if (active) setActive(false);
+                setKeyValue(key, value);
+              }}
+              currValue={(selectedOpt as any)[option.name]}
+            />
+          ))}
+        </div>
+      </aside>
+      {active && !hidden && (
+        <ColorPicker
+          colorStr={(selectedOpt as any)[optName]}
+          onChange={(col: string) => {
+            setKeyValue(optName, col);
+          }}
+        />
       )}
-    >
-      {/* Sidebar content goes here */}
-      <div className="flex flex-col items-start p-4 space-y-2">
-        {activeOptions.map((option) => (
-          <Option
-            key={option.name}
-            {...option}
-            setValue={setKeyValue}
-            currValue={(selectedOpt as any)[option.name]}
-          />
-        ))}
-      </div>
-    </aside>
+    </>
   );
 }

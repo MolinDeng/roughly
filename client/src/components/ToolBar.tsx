@@ -101,6 +101,7 @@ export function ToolBar() {
         {tools.map((tool) => (
           <div key={tool.value} className="relative text-gray-400">
             <ToggleGroupItem
+              className="px-3"
               value={tool.value}
               aria-label={tool.ariaLabel}
               disabled={tool.disabled}
